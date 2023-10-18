@@ -14,6 +14,9 @@ coverage:
 test:
 	./scripts/tests.sh
 
+genmocks:
+	echo ''
+
 
 PLATFORMS := linux/amd64 darwin/amd64 darwin/arm64 linux/arm
 temp = $(subst /, ,$@)
