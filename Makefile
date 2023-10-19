@@ -6,7 +6,7 @@ all: help
 license:
 	@echo "  >  \033[32mAdding license headers...\033[0m "
 	GO111MODULE=off go get -u github.com/google/addlicense
-	addlicense -v -c "Sygma" -f ./scripts/header.txt -y 2021 -ignore ".idea/**"  .
+	addlicense -v -c "Sygma" -f ./scripts/header.txt -y 2023 -ignore ".idea/**"  .
 
 coverage:
 	go tool cover -func cover.out | grep total | awk '{print $3}'
