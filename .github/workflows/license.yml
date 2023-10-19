@@ -15,7 +15,4 @@ jobs:
 
       - run: go install github.com/google/addlicense@latest
 
-      - run: make license
-
-      - name: license updated check
-        run: git diff --exit-code
+      - run: make license-check
