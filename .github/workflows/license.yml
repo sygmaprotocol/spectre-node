@@ -6,10 +6,14 @@ name: License check
 env:
   GO111MODULE: on 
   
+jobs:
   license-check:
     runs-on: ubuntu-latest
+    container: golang:1.19
     steps:
       - uses: actions/checkout@v2
+
+      - run: go install github.com/google/addlicense@latest
 
       - run: make license
 
