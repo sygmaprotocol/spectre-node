@@ -8,12 +8,17 @@ import "github.com/kelseyhightower/envconfig"
 const PREFIX = "SPECTRE"
 
 type Config struct {
-	Observability
+	Observability *Observability `env_config:"observability"`
+	Prover        *Prover        `env_config:"prover"`
 }
 
 type Observability struct {
 	LogLevel string `default:"debug" split_words:"true"`
 	LogFile  string `default:"out.log" split_words:"true"`
+}
+
+type Prover struct {
+	URL string `required:"true"`
 }
 
 // LoadConfig loads config from the environment and validates the fields
