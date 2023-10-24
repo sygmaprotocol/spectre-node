@@ -55,3 +55,41 @@ func (mr *MockEventFetcherMockRecorder) FetchEventLogs(ctx, contractAddress, eve
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchEventLogs", reflect.TypeOf((*MockEventFetcher)(nil).FetchEventLogs), ctx, contractAddress, event, startBlock, endBlock)
 }
+
+// MockStepProver is a mock of StepProver interface.
+type MockStepProver struct {
+	ctrl     *gomock.Controller
+	recorder *MockStepProverMockRecorder
+}
+
+// MockStepProverMockRecorder is the mock recorder for MockStepProver.
+type MockStepProverMockRecorder struct {
+	mock *MockStepProver
+}
+
+// NewMockStepProver creates a new mock instance.
+func NewMockStepProver(ctrl *gomock.Controller) *MockStepProver {
+	mock := &MockStepProver{ctrl: ctrl}
+	mock.recorder = &MockStepProverMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockStepProver) EXPECT() *MockStepProverMockRecorder {
+	return m.recorder
+}
+
+// StepProof mocks base method.
+func (m *MockStepProver) StepProof(blocknumber *big.Int) (any, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StepProof", blocknumber)
+	ret0, _ := ret[0].(any)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// StepProof indicates an expected call of StepProof.
+func (mr *MockStepProverMockRecorder) StepProof(blocknumber any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StepProof", reflect.TypeOf((*MockStepProver)(nil).StepProof), blocknumber)
+}

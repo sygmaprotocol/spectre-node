@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/sygmaprotocol/spectre-node/chains/evm/listener/events"
 	"github.com/sygmaprotocol/spectre-node/chains/evm/listener/events/handlers"
+	evmMessage "github.com/sygmaprotocol/spectre-node/chains/evm/message"
 	"github.com/sygmaprotocol/spectre-node/mock"
 	"github.com/sygmaprotocol/sygma-core/relayer/message"
 	"go.uber.org/mock/gomock"
@@ -42,6 +43,7 @@ type DepositHandlerTestSuite struct {
 
 	msgChan          chan []*message.Message
 	mockEventFetcher *mock.MockEventFetcher
+	mockStepProver   *mock.MockStepProver
 }
 
 func TestRunConfigTestSuite(t *testing.T) {
@@ -51,11 +53,14 @@ func TestRunConfigTestSuite(t *testing.T) {
 func (s *DepositHandlerTestSuite) SetupTest() {
 	ctrl := gomock.NewController(s.T())
 	s.mockEventFetcher = mock.NewMockEventFetcher(ctrl)
+	s.mockStepProver = mock.NewMockStepProver(ctrl)
 	s.msgChan = make(chan []*message.Message, 1)
 	s.depositHandler = handlers.NewDepositEventHandler(
 		s.msgChan,
 		s.mockEventFetcher,
-		common.HexToAddress("0xb0b13f0109ef097C3Aa70Fb543EA4942114A845d"))
+		s.mockStepProver,
+		common.HexToAddress("0xb0b13f0109ef097C3Aa70Fb543EA4942114A845d"),
+		1)
 }
 
 func (s *DepositHandlerTestSuite) Test_HandleEvents_FetchingDepositsFails() {
@@ -94,12 +99,46 @@ func (s *DepositHandlerTestSuite) Test_HandleEvents_NoEvents_MessageNotSent() {
 	s.NotNil(err)
 }
 
+func (s *DepositHandlerTestSuite) Test_HandleEvents_ValidDeposit_ProverFails() {
+	validDepositData, _ := hex.DecodeString("000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000000")
+	invalidDepositData := []byte("invalid")
+
+	startBlock := big.NewInt(0)
+	endBlock := big.NewInt(4)
+	s.mockStepProver.EXPECT().StepProof(endBlock).Return(nil, fmt.Errorf("error"))
+	s.mockEventFetcher.EXPECT().FetchEventLogs(
+		context.Background(),
+		gomock.Any(),
+		string(events.DepositSig),
+		startBlock,
+		endBlock,
+	).Return([]types.Log{
+		{
+			Data: invalidDepositData,
+		},
+		{
+			Data: validDepositData,
+			Topics: []common.Hash{
+				{},
+				common.HexToHash("0xd68eb9b5E135b96c1Af165e1D8c4e2eB0E1CE4CD"),
+			},
+		},
+	}, nil)
+
+	err := s.depositHandler.HandleEvents(startBlock, endBlock)
+	s.NotNil(err)
+
+	_, err = readFromChannel(s.msgChan)
+	s.NotNil(err)
+}
+
 func (s *DepositHandlerTestSuite) Test_HandleEvents_ValidDeposit() {
 	validDepositData, _ := hex.DecodeString("000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000000")
 	invalidDepositData := []byte("invalid")
 
 	startBlock := big.NewInt(0)
 	endBlock := big.NewInt(4)
+	s.mockStepProver.EXPECT().StepProof(endBlock).Return("step data", nil)
 	s.mockEventFetcher.EXPECT().FetchEventLogs(
 		context.Background(),
 		gomock.Any(),
@@ -124,5 +163,9 @@ func (s *DepositHandlerTestSuite) Test_HandleEvents_ValidDeposit() {
 
 	msgs, err := readFromChannel(s.msgChan)
 	s.Nil(err)
-	s.Equal(len(msgs), 1)
+	s.Equal(msgs[0], evmMessage.NewEvmStepMessage(
+		1,
+		2,
+		"step data",
+	))
 }
