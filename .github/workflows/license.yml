@@ -1,15 +1,18 @@
+# The Licensed Work is (c) 2023 Sygma
+# SPDX-License-Identifier: LGPL-3.0-only
 
 on: [pull_request]
 name: License check
 env:
   GO111MODULE: on 
   
+jobs:
   license-check:
     runs-on: ubuntu-latest
+    container: golang:1.19
     steps:
       - uses: actions/checkout@v2
 
-      - run: make license
+      - run: go install github.com/google/addlicense@latest
 
-      - name: license updated check
-        run: git diff --exit-code
+      - run: make license-check
