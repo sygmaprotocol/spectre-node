@@ -166,6 +166,8 @@ func (s *DepositHandlerTestSuite) Test_HandleEvents_ValidDeposit() {
 	s.Equal(msgs[0], evmMessage.NewEvmStepMessage(
 		1,
 		2,
-		"step data",
+		evmMessage.StepData{
+			Proof: SliceTo32Bytes([]byte("step data")),
+		},
 	))
 }

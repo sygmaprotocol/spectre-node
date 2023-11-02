@@ -26,7 +26,7 @@ type EventFetcher interface {
 }
 
 type StepProver interface {
-	StepProof(blocknumber *big.Int) ([]byte, error)
+	StepProof(blocknumber *big.Int) ([32]byte, error)
 }
 
 type DepositEventHandler struct {
@@ -42,7 +42,7 @@ type DepositEventHandler struct {
 	// stores latest epoch for which we submitted a step proof per domain to
 	// prevent submitting proofs to the same domain twice
 	latestStepEpoch map[uint8]uint64
-	steps           map[uint64][]byte
+	steps           map[uint64][32]byte
 }
 
 func NewDepositEventHandler(
@@ -61,7 +61,7 @@ func NewDepositEventHandler(
 		msgChan:         msgChan,
 		domainID:        domainID,
 		latestStepEpoch: make(map[uint8]uint64),
-		steps:           make(map[uint64][]byte),
+		steps:           make(map[uint64][32]byte),
 	}
 }
 
@@ -92,7 +92,9 @@ func (h *DepositEventHandler) HandleEvents(startBlock *big.Int, endBlock *big.In
 			evmMessage.NewEvmStepMessage(
 				h.domainID,
 				deposits[0].DestinationDomainID,
-				proof,
+				evmMessage.StepData{
+					Proof: proof,
+				},
 			),
 		}
 	}
