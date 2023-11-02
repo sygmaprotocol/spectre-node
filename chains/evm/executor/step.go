@@ -13,10 +13,17 @@ type StepSubmitter interface {
 }
 
 type EVMStepExecutor struct {
+	domainID uint8
+
 	stepSubmitter StepSubmitter
 }
 
-func NewEVMStepExecutor(stepSubmitter StepSubmitter) *EVMStepExecutor
+func NewEVMStepExecutor(domainID uint8, stepSubmitter StepSubmitter) *EVMStepExecutor {
+	return &EVMStepExecutor{
+		stepSubmitter: stepSubmitter,
+		domainID:      domainID,
+	}
+}
 
 func (e *EVMStepExecutor) Execute(props []*proposal.Proposal) error {
 	stepData := props[0].Data.(message.StepData)
@@ -25,6 +32,6 @@ func (e *EVMStepExecutor) Execute(props []*proposal.Proposal) error {
 		return err
 	}
 
-	log.Info().Msgf("Sent step with hash: %s", hash)
+	log.Info().Uint8("domainID", e.domainID).Msgf("Sent EVM step with hash: %s", hash)
 	return nil
 }
