@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"math/big"
 	"testing"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -99,13 +100,49 @@ func (s *DepositHandlerTestSuite) Test_HandleEvents_NoEvents_MessageNotSent() {
 	s.NotNil(err)
 }
 
+func (s *DepositHandlerTestSuite) Test_HandleEvents_ValidDeposit_FetchingHeaderFails() {
+	validDepositData, _ := hex.DecodeString("000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000000")
+	invalidDepositData := []byte("invalid")
+
+	startBlock := big.NewInt(0)
+	endBlock := big.NewInt(4)
+	s.mockEventFetcher.EXPECT().HeaderByHash(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("error"))
+	s.mockEventFetcher.EXPECT().FetchEventLogs(
+		context.Background(),
+		gomock.Any(),
+		string(events.DepositSig),
+		startBlock,
+		endBlock,
+	).Return([]types.Log{
+		{
+			Data: invalidDepositData,
+		},
+		{
+			Data: validDepositData,
+			Topics: []common.Hash{
+				{},
+				common.HexToHash("0xd68eb9b5E135b96c1Af165e1D8c4e2eB0E1CE4CD"),
+			},
+		},
+	}, nil)
+
+	err := s.depositHandler.HandleEvents(startBlock, endBlock)
+	s.NotNil(err)
+
+	_, err = readFromChannel(s.msgChan)
+	s.NotNil(err)
+}
+
 func (s *DepositHandlerTestSuite) Test_HandleEvents_ValidDeposit_ProverFails() {
 	validDepositData, _ := hex.DecodeString("000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000000")
 	invalidDepositData := []byte("invalid")
 
 	startBlock := big.NewInt(0)
 	endBlock := big.NewInt(4)
-	s.mockStepProver.EXPECT().StepProof(endBlock).Return(nil, fmt.Errorf("error"))
+	s.mockStepProver.EXPECT().StepProof(endBlock).Return([32]byte{}, fmt.Errorf("error"))
+	s.mockEventFetcher.EXPECT().HeaderByHash(gomock.Any(), gomock.Any()).Return(&types.Header{
+		Time: uint64(time.Now().Unix()),
+	}, nil)
 	s.mockEventFetcher.EXPECT().FetchEventLogs(
 		context.Background(),
 		gomock.Any(),
@@ -138,7 +175,10 @@ func (s *DepositHandlerTestSuite) Test_HandleEvents_ValidDeposit() {
 
 	startBlock := big.NewInt(0)
 	endBlock := big.NewInt(4)
-	s.mockStepProver.EXPECT().StepProof(endBlock).Return("step data", nil)
+	s.mockStepProver.EXPECT().StepProof(endBlock).Return(SliceTo32Bytes([]byte("step data")), nil)
+	s.mockEventFetcher.EXPECT().HeaderByHash(gomock.Any(), gomock.Any()).Return(&types.Header{
+		Time: uint64(time.Now().Unix()),
+	}, nil)
 	s.mockEventFetcher.EXPECT().FetchEventLogs(
 		context.Background(),
 		gomock.Any(),
