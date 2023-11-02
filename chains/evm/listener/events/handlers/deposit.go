@@ -16,15 +16,17 @@ import (
 	"github.com/sygmaprotocol/spectre-node/chains/evm/abi"
 	"github.com/sygmaprotocol/spectre-node/chains/evm/listener/events"
 	evmMessage "github.com/sygmaprotocol/spectre-node/chains/evm/message"
+	"github.com/sygmaprotocol/spectre-node/chains/evm/prover"
 	"github.com/sygmaprotocol/sygma-core/relayer/message"
 )
 
 type EventFetcher interface {
 	FetchEventLogs(ctx context.Context, contractAddress common.Address, event string, startBlock *big.Int, endBlock *big.Int) ([]types.Log, error)
+	HeaderByHash(ctx context.Context, hash common.Hash) (*types.Header, error)
 }
 
 type StepProver interface {
-	StepProof(blocknumber *big.Int) (interface{}, error)
+	StepProof(blocknumber *big.Int) ([]byte, error)
 }
 
 type DepositEventHandler struct {
@@ -36,6 +38,11 @@ type DepositEventHandler struct {
 	domainID      uint8
 	routerABI     ethereumABI.ABI
 	routerAddress common.Address
+
+	// stores latest epoch for which we submitted a step proof per domain to
+	// prevent submitting proofs to the same domain twice
+	latestStepEpoch map[uint8]uint64
+	steps           map[uint64][]byte
 }
 
 func NewDepositEventHandler(
@@ -47,19 +54,21 @@ func NewDepositEventHandler(
 ) *DepositEventHandler {
 	routerABI, _ := ethereumABI.JSON(strings.NewReader(abi.RouterABI))
 	return &DepositEventHandler{
-		eventFetcher:  eventFetcher,
-		stepProver:    stepProver,
-		routerAddress: routerAddress,
-		routerABI:     routerABI,
-		msgChan:       msgChan,
-		domainID:      domainID,
+		eventFetcher:    eventFetcher,
+		stepProver:      stepProver,
+		routerAddress:   routerAddress,
+		routerABI:       routerABI,
+		msgChan:         msgChan,
+		domainID:        domainID,
+		latestStepEpoch: make(map[uint8]uint64),
+		steps:           make(map[uint64][]byte),
 	}
 }
 
 // HandleEvents fetches deposit events and if deposits exists, submits a step message
 // to be executed on the destination network
 func (h *DepositEventHandler) HandleEvents(startBlock *big.Int, endBlock *big.Int) error {
-	deposits, err := h.fetchDeposits(startBlock, endBlock)
+	deposits, timestamp, err := h.fetchDeposits(startBlock, endBlock)
 	if err != nil {
 		return fmt.Errorf("unable to fetch deposit events because of: %+v", err)
 	}
@@ -71,11 +80,14 @@ func (h *DepositEventHandler) HandleEvents(startBlock *big.Int, endBlock *big.In
 		return nil
 	}
 
+	epoch := prover.EpochFromTimestamp(timestamp)
 	proof, err := h.stepProver.StepProof(endBlock)
 	if err != nil {
 		return err
 	}
+	h.steps[epoch] = proof
 	for _, deposits := range domainDeposits {
+		h.latestStepEpoch[deposits[0].DestinationDomainID] = epoch
 		h.msgChan <- []*message.Message{
 			evmMessage.NewEvmStepMessage(
 				h.domainID,
@@ -87,13 +99,17 @@ func (h *DepositEventHandler) HandleEvents(startBlock *big.Int, endBlock *big.In
 	return nil
 }
 
-func (h *DepositEventHandler) fetchDeposits(startBlock *big.Int, endBlock *big.Int) ([]*events.Deposit, error) {
+func (h *DepositEventHandler) fetchDeposits(startBlock *big.Int, endBlock *big.Int) ([]*events.Deposit, uint64, error) {
 	logs, err := h.eventFetcher.FetchEventLogs(context.Background(), h.routerAddress, string(events.DepositSig), startBlock, endBlock)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	deposits := make([]*events.Deposit, 0)
+	if len(logs) == 0 {
+		return deposits, 0, nil
+	}
+
 	for _, dl := range logs {
 		d, err := h.unpackDeposit(dl.Data)
 		if err != nil {
@@ -106,7 +122,12 @@ func (h *DepositEventHandler) fetchDeposits(startBlock *big.Int, endBlock *big.I
 		deposits = append(deposits, d)
 	}
 
-	return deposits, nil
+	header, err := h.eventFetcher.HeaderByHash(context.Background(), logs[0].BlockHash)
+	if err != nil {
+		return deposits, 0, err
+	}
+
+	return deposits, header.Time, nil
 }
 
 func (h *DepositEventHandler) unpackDeposit(data []byte) (*events.Deposit, error) {
