@@ -21,7 +21,7 @@ test:
 	./scripts/tests.sh
 
 genmocks:
-	echo ''
+	mockgen -source=./chains/evm/listener/events/handlers/deposit.go -destination=./mock/handlers.go -package mock
 
 
 PLATFORMS := linux/amd64 darwin/amd64 darwin/arm64 linux/arm
