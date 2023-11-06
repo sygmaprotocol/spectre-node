@@ -33,8 +33,6 @@ type EVMListener struct {
 
 	eventHandlers []EventHandler
 
-	blockstore BlockStorer
-
 	domainID      uint8
 	retryInterval time.Duration
 	blockInterval *big.Int
