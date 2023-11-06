@@ -22,6 +22,7 @@ test:
 
 genmocks:
 	mockgen -source=./chains/evm/listener/events/handlers/deposit.go -destination=./mock/handlers.go -package mock
+	mockgen -source=./chains/evm/listener/listener.go -destination=./mock/listener.go -package mock
 	mockgen -source=./chains/evm/executor/step.go -destination=./mock/executor.go -package mock
 
 

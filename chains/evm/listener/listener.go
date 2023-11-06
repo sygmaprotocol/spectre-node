@@ -47,7 +47,6 @@ type EVMListener struct {
 func NewEVMListener(
 	beaconProvider BeaconProvider,
 	eventHandlers []EventHandler,
-	blockstore BlockStorer,
 	domainID uint8,
 	retryInterval time.Duration,
 	blockInterval *big.Int) *EVMListener {
@@ -56,7 +55,6 @@ func NewEVMListener(
 		log:            logger,
 		beaconProvider: beaconProvider,
 		eventHandlers:  eventHandlers,
-		blockstore:     blockstore,
 		domainID:       domainID,
 		retryInterval:  retryInterval,
 		blockInterval:  blockInterval,
@@ -66,14 +64,14 @@ func NewEVMListener(
 // ListenToEvents waits for new finality checkpoints and calls event handlers
 // with the finalized epoch block range
 func (l *EVMListener) ListenToEvents(ctx context.Context, epoch *big.Int) {
-	currentCheckpoint := ""
+	latestCheckpoint := "0x0000000000000000000000000000000000000000000000000000000000000000"
 loop:
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		default:
-			finalityCheckpoint, err := l.beaconProvider.Finality(context.Background(), &api.FinalityOpts{
+			finalityCheckpoint, err := l.beaconProvider.Finality(ctx, &api.FinalityOpts{
 				State: "finalized",
 			})
 			if err != nil {
@@ -81,13 +79,12 @@ loop:
 				time.Sleep(l.retryInterval)
 				continue
 			}
-			if finalityCheckpoint.Data.Finalized.Root.String() == currentCheckpoint {
+			if finalityCheckpoint.Data.Finalized.Root.String() == latestCheckpoint {
 				time.Sleep(l.retryInterval)
 				continue
 			}
-			currentCheckpoint = finalityCheckpoint.Data.Finalized.Root.String()
 
-			justifiedRoot, err := l.beaconProvider.SignedBeaconBlock(context.Background(), &api.SignedBeaconBlockOpts{
+			justifiedRoot, err := l.beaconProvider.SignedBeaconBlock(ctx, &api.SignedBeaconBlockOpts{
 				Block: finalityCheckpoint.Data.Justified.Root.String(),
 			})
 			if err != nil {
@@ -108,6 +105,8 @@ loop:
 				}
 			}
 			l.log.Debug().Msgf("Handled events for block range %s-%s", startBlock, endBlock)
+
+			latestCheckpoint = finalityCheckpoint.Data.Finalized.Root.String()
 		}
 	}
 }
