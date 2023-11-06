@@ -56,21 +56,6 @@ func (mr *MockEventFetcherMockRecorder) FetchEventLogs(ctx, contractAddress, eve
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchEventLogs", reflect.TypeOf((*MockEventFetcher)(nil).FetchEventLogs), ctx, contractAddress, event, startBlock, endBlock)
 }
 
-// HeaderByHash mocks base method.
-func (m *MockEventFetcher) HeaderByHash(ctx context.Context, hash common.Hash) (*types.Header, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "HeaderByHash", ctx, hash)
-	ret0, _ := ret[0].(*types.Header)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// HeaderByHash indicates an expected call of HeaderByHash.
-func (mr *MockEventFetcherMockRecorder) HeaderByHash(ctx, hash any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HeaderByHash", reflect.TypeOf((*MockEventFetcher)(nil).HeaderByHash), ctx, hash)
-}
-
 // MockStepProver is a mock of StepProver interface.
 type MockStepProver struct {
 	ctrl     *gomock.Controller

@@ -21,7 +21,6 @@ import (
 
 type EventFetcher interface {
 	FetchEventLogs(ctx context.Context, contractAddress common.Address, event string, startBlock *big.Int, endBlock *big.Int) ([]types.Log, error)
-	HeaderByHash(ctx context.Context, hash common.Hash) (*types.Header, error)
 }
 
 type StepProver interface {
@@ -37,11 +36,6 @@ type DepositEventHandler struct {
 	domainID      uint8
 	routerABI     ethereumABI.ABI
 	routerAddress common.Address
-
-	// stores latest epoch for which we submitted a step proof per domain to
-	// prevent submitting proofs to the same domain twice
-	latestStepEpoch map[uint8]uint64
-	steps           map[uint64][32]byte
 }
 
 func NewDepositEventHandler(
@@ -102,10 +96,6 @@ func (h *DepositEventHandler) fetchDeposits(startBlock *big.Int, endBlock *big.I
 	}
 
 	deposits := make([]*events.Deposit, 0)
-	if len(logs) == 0 {
-		return deposits, nil
-	}
-
 	for _, dl := range logs {
 		d, err := h.unpackDeposit(dl.Data)
 		if err != nil {
