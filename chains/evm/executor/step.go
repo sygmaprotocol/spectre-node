@@ -12,7 +12,7 @@ import (
 )
 
 type StepSubmitter interface {
-	Step(args message.SyncStepInput, poseidonCommitment [32]byte, opts transactor.TransactOptions) (*common.Hash, error)
+	Step(input message.SyncStepInput, stepProof [32]byte, opts transactor.TransactOptions) (*common.Hash, error)
 }
 
 type EVMStepExecutor struct {

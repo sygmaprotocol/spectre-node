@@ -41,16 +41,16 @@ func (m *MockStepSubmitter) EXPECT() *MockStepSubmitterMockRecorder {
 }
 
 // Step mocks base method.
-func (m *MockStepSubmitter) Step(args message.SyncStepInput, poseidonCommitment [32]byte, opts transactor.TransactOptions) (*common.Hash, error) {
+func (m *MockStepSubmitter) Step(input message.SyncStepInput, stepProof [32]byte, opts transactor.TransactOptions) (*common.Hash, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Step", args, poseidonCommitment, opts)
+	ret := m.ctrl.Call(m, "Step", input, stepProof, opts)
 	ret0, _ := ret[0].(*common.Hash)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Step indicates an expected call of Step.
-func (mr *MockStepSubmitterMockRecorder) Step(args, poseidonCommitment, opts any) *gomock.Call {
+func (mr *MockStepSubmitterMockRecorder) Step(input, stepProof, opts any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Step", reflect.TypeOf((*MockStepSubmitter)(nil).Step), args, poseidonCommitment, opts)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Step", reflect.TypeOf((*MockStepSubmitter)(nil).Step), input, stepProof, opts)
 }
