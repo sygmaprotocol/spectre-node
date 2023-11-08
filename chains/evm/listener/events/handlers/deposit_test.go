@@ -46,7 +46,7 @@ type DepositHandlerTestSuite struct {
 	mockStepProver   *mock.MockProver
 }
 
-func TestRunConfigTestSuite(t *testing.T) {
+func TestRunDepositTestSuite(t *testing.T) {
 	suite.Run(t, new(DepositHandlerTestSuite))
 }
 

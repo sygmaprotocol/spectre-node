@@ -26,16 +26,17 @@ type RotateHandler struct {
 	prover Prover
 
 	syncCommitteeFetcher SyncCommitteeFetcher
-	currentSyncCommittee *api.Response[*apiv1.SyncCommittee]
+	currentSyncCommittee *apiv1.SyncCommittee
 }
 
-func NewRotateHandler(domainID uint8, domains []uint8, msgChan chan []*message.Message, syncCommitteeFetcher SyncCommitteeFetcher, prover Prover) *RotateHandler {
+func NewRotateHandler(msgChan chan []*message.Message, syncCommitteeFetcher SyncCommitteeFetcher, prover Prover, domainID uint8, domains []uint8) *RotateHandler {
 	return &RotateHandler{
 		syncCommitteeFetcher: syncCommitteeFetcher,
 		prover:               prover,
 		domainID:             domainID,
 		domains:              domains,
 		msgChan:              msgChan,
+		currentSyncCommittee: &apiv1.SyncCommittee{},
 	}
 }
 
@@ -48,7 +49,7 @@ func (h *RotateHandler) HandleEvents(startBlock *big.Int, endBlock *big.Int) err
 	if err != nil {
 		return err
 	}
-	if syncCommittee.Data.String() == h.currentSyncCommittee.Data.String() {
+	if syncCommittee.Data.String() == h.currentSyncCommittee.String() {
 		return nil
 	}
 
