@@ -48,11 +48,9 @@ func (s *RotateHandlerTestSuite) SetupTest() {
 }
 
 func (s *RotateHandlerTestSuite) Test_HandleEvents_FetchingCommitteeFails() {
-	startBlock := big.NewInt(0)
-	endBlock := big.NewInt(4)
 	s.mockSyncCommitteeFetcher.EXPECT().SyncCommittee(context.Background(), gomock.Any()).Return(nil, fmt.Errorf("error"))
 
-	err := s.handler.HandleEvents(startBlock, endBlock)
+	err := s.handler.HandleEvents(nil)
 	s.NotNil(err)
 
 	_, err = readFromChannel(s.msgChan)
@@ -60,13 +58,11 @@ func (s *RotateHandlerTestSuite) Test_HandleEvents_FetchingCommitteeFails() {
 }
 
 func (s *RotateHandlerTestSuite) Test_HandleEvents_SyncCommitteeNotChanged() {
-	startBlock := big.NewInt(0)
-	endBlock := big.NewInt(4)
 	s.mockSyncCommitteeFetcher.EXPECT().SyncCommittee(context.Background(), gomock.Any()).Return(&api.Response[*apiv1.SyncCommittee]{
 		Data: &apiv1.SyncCommittee{},
 	}, nil)
 
-	err := s.handler.HandleEvents(startBlock, endBlock)
+	err := s.handler.HandleEvents(nil)
 	s.Nil(err)
 
 	_, err = readFromChannel(s.msgChan)
@@ -74,16 +70,15 @@ func (s *RotateHandlerTestSuite) Test_HandleEvents_SyncCommitteeNotChanged() {
 }
 
 func (s *RotateHandlerTestSuite) Test_HandleEvents_NewSyncCommittee_ProofFails() {
-	startBlock := big.NewInt(0)
 	endBlock := big.NewInt(4)
 	s.mockSyncCommitteeFetcher.EXPECT().SyncCommittee(context.Background(), gomock.Any()).Return(&api.Response[*apiv1.SyncCommittee]{
 		Data: &apiv1.SyncCommittee{
 			Validators: []phase0.ValidatorIndex{128},
 		},
 	}, nil)
-	s.mockProver.EXPECT().StepProof(endBlock).Return([32]byte{}, fmt.Errorf("error"))
+	s.mockProver.EXPECT().StepProof().Return([32]byte{}, fmt.Errorf("error"))
 
-	err := s.handler.HandleEvents(startBlock, endBlock)
+	err := s.handler.HandleEvents(nil)
 	s.NotNil(err)
 	_, err = readFromChannel(s.msgChan)
 	s.NotNil(err)
@@ -93,27 +88,26 @@ func (s *RotateHandlerTestSuite) Test_HandleEvents_NewSyncCommittee_ProofFails()
 			Validators: []phase0.ValidatorIndex{128},
 		},
 	}, nil)
-	s.mockProver.EXPECT().StepProof(endBlock).Return([32]byte{}, nil)
+	s.mockProver.EXPECT().StepProof().Return([32]byte{}, nil)
 	s.mockProver.EXPECT().RotateProof(endBlock).Return([32]byte{}, fmt.Errorf("error"))
 
-	err = s.handler.HandleEvents(startBlock, endBlock)
+	err = s.handler.HandleEvents(nil)
 	s.NotNil(err)
 	_, err = readFromChannel(s.msgChan)
 	s.NotNil(err)
 }
 
 func (s *RotateHandlerTestSuite) Test_HandleEvents_NewSyncCommittee() {
-	startBlock := big.NewInt(0)
 	endBlock := big.NewInt(4)
 	s.mockSyncCommitteeFetcher.EXPECT().SyncCommittee(context.Background(), gomock.Any()).Return(&api.Response[*apiv1.SyncCommittee]{
 		Data: &apiv1.SyncCommittee{
 			Validators: []phase0.ValidatorIndex{128},
 		},
 	}, nil)
-	s.mockProver.EXPECT().StepProof(endBlock).Return([32]byte{1}, nil)
+	s.mockProver.EXPECT().StepProof().Return([32]byte{1}, nil)
 	s.mockProver.EXPECT().RotateProof(endBlock).Return([32]byte{1}, nil)
 
-	err := s.handler.HandleEvents(startBlock, endBlock)
+	err := s.handler.HandleEvents(nil)
 	s.Nil(err)
 
 	msgs, err := readFromChannel(s.msgChan)

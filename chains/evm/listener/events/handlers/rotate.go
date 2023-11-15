@@ -5,7 +5,6 @@ package handlers
 
 import (
 	"context"
-	"math/big"
 
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
@@ -42,7 +41,7 @@ func NewRotateHandler(msgChan chan []*message.Message, syncCommitteeFetcher Sync
 
 // HandleEvents checks if there is a new sync committee and sends a rotate message
 // if there is
-func (h *RotateHandler) HandleEvents(startBlock *big.Int, endBlock *big.Int) error {
+func (h *RotateHandler) HandleEvents(checkpoint *apiv1.Finality) error {
 	syncCommittee, err := h.syncCommitteeFetcher.SyncCommittee(context.Background(), &api.SyncCommitteeOpts{
 		State: "finalized",
 	})
@@ -55,11 +54,11 @@ func (h *RotateHandler) HandleEvents(startBlock *big.Int, endBlock *big.Int) err
 
 	log.Info().Uint8("domainID", h.domainID).Msgf("Rotating committee")
 
-	stepProof, err := h.prover.StepProof(endBlock)
+	stepProof, err := h.prover.StepProof()
 	if err != nil {
 		return err
 	}
-	rotateProof, err := h.prover.RotateProof(endBlock)
+	rotateProof, err := h.prover.RotateProof(uint64(checkpoint.Finalized.Epoch))
 	if err != nil {
 		return err
 	}
