@@ -31,7 +31,7 @@ func (s *ProverTestSuite) SetupTest() {
 	s.lightClientMock = mock.NewMockLightClient(ctrl)
 	s.proverClientMock = mock.NewMockProverClient(ctrl)
 	s.beaconClientMock = mock.NewMockBeaconClient(ctrl)
-	s.prover = prover.NewProver(s.proverClientMock, s.beaconClientMock, s.lightClientMock, prover.MAINNET_SPEC, 32, 256)
+	s.prover = prover.NewProver(s.proverClientMock, s.beaconClientMock, s.lightClientMock, prover.MAINNET_SPEC, 256)
 }
 
 func (s *ProverTestSuite) Test_StepProof_InvalidFinalityUpdate() {
@@ -178,7 +178,7 @@ func (s *ProverTestSuite) Test_RotateProof_InvalidProof() {
 }
 
 func (s *ProverTestSuite) Test_RotateProof_ValidProof() {
-	s.lightClientMock.EXPECT().Updates(uint64(1)).Return([]*consensus.LightClientUpdateCapella{{
+	s.lightClientMock.EXPECT().Updates(uint64(39)).Return([]*consensus.LightClientUpdateCapella{{
 		FinalityBranch: [][32]byte{{1}},
 	}}, nil)
 	s.proverClientMock.EXPECT().Call("genEvmProofAndInstancesRotationCircuit", &prover.RotateArgs{

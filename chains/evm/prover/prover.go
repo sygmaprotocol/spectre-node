@@ -47,7 +47,6 @@ type Prover struct {
 	proverClient ProverClient
 
 	spec                  Spec
-	epochLength           uint64
 	committeePeriodLength uint64
 }
 
@@ -56,13 +55,11 @@ func NewProver(
 	beaconClient BeaconClient,
 	lightClient LightClient,
 	spec Spec,
-	epochLength uint64,
 	committeePeriodLength uint64,
 ) *Prover {
 	return &Prover{
 		proverClient:          proverClient,
 		spec:                  spec,
-		epochLength:           epochLength,
 		committeePeriodLength: committeePeriodLength,
 		beaconClient:          beaconClient,
 		lightClient:           lightClient,
@@ -86,8 +83,8 @@ func (p *Prover) StepProof() (*EvmProof, error) {
 }
 
 // RotateProof generates the proof for the sync committee rotation for the period
-func (p *Prover) RotateProof(slot uint64) (*EvmProof, error) {
-	args, err := p.rotateArgs(slot)
+func (p *Prover) RotateProof(epoch uint64) (*EvmProof, error) {
+	args, err := p.rotateArgs(epoch)
 	if err != nil {
 		return nil, err
 	}
@@ -131,8 +128,8 @@ func (p *Prover) stepArgs() (*StepArgs, error) {
 	}, nil
 }
 
-func (p *Prover) rotateArgs(slot uint64) (*RotateArgs, error) {
-	period := slot / p.epochLength / p.committeePeriodLength
+func (p *Prover) rotateArgs(epoch uint64) (*RotateArgs, error) {
+	period := epoch / p.committeePeriodLength
 	updates, err := p.lightClient.Updates(period)
 	if err != nil {
 		return nil, err

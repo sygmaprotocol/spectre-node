@@ -10,18 +10,16 @@ import (
 
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
-	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
 type EventHandler interface {
-	HandleEvents(startBlock *big.Int, endBlock *big.Int) error
+	HandleEvents(checkpoint *apiv1.Finality) error
 }
 
 type BeaconProvider interface {
 	Finality(ctx context.Context, opts *api.FinalityOpts) (*api.Response[*apiv1.Finality], error)
-	SignedBeaconBlock(ctx context.Context, opts *api.SignedBeaconBlockOpts) (*api.Response[*spec.VersionedSignedBeaconBlock], error)
 }
 
 type BlockStorer interface {
@@ -82,27 +80,17 @@ loop:
 				continue
 			}
 
-			justifiedRoot, err := l.beaconProvider.SignedBeaconBlock(ctx, &api.SignedBeaconBlockOpts{
-				Block: finalityCheckpoint.Data.Justified.Root.String(),
-			})
-			if err != nil {
-				l.log.Warn().Err(err).Msgf("Unable to fetch justified root")
-				time.Sleep(l.retryInterval)
-				continue
-			}
-			endBlock := big.NewInt(int64(justifiedRoot.Data.Capella.Message.Body.ExecutionPayload.BlockNumber))
-			startBlock := new(big.Int).Sub(endBlock, big.NewInt(l.blockInterval.Int64()))
-
-			l.log.Debug().Msgf("Fetching evm events for block range %s-%s", startBlock, endBlock)
+			l.log.Debug().Msgf("Handling events for checkpoint %+v", finalityCheckpoint.Data)
 
 			for _, handler := range l.eventHandlers {
-				err := handler.HandleEvents(startBlock, endBlock)
+				err := handler.HandleEvents(finalityCheckpoint.Data)
 				if err != nil {
 					l.log.Warn().Err(err).Msgf("Unable to handle events")
 					continue loop
 				}
 			}
-			l.log.Debug().Msgf("Handled events for block range %s-%s", startBlock, endBlock)
+
+			l.log.Debug().Msgf("Handled events for checkpoint %+v", finalityCheckpoint.Data)
 
 			latestCheckpoint = finalityCheckpoint.Data.Finalized.Root.String()
 		}

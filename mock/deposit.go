@@ -80,31 +80,31 @@ func (m *MockProver) EXPECT() *MockProverMockRecorder {
 }
 
 // RotateProof mocks base method.
-func (m *MockProver) RotateProof(blocknumber *big.Int) ([32]byte, error) {
+func (m *MockProver) RotateProof(slot uint64) ([32]byte, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RotateProof", blocknumber)
+	ret := m.ctrl.Call(m, "RotateProof", slot)
 	ret0, _ := ret[0].([32]byte)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // RotateProof indicates an expected call of RotateProof.
-func (mr *MockProverMockRecorder) RotateProof(blocknumber any) *gomock.Call {
+func (mr *MockProverMockRecorder) RotateProof(slot any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RotateProof", reflect.TypeOf((*MockProver)(nil).RotateProof), blocknumber)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RotateProof", reflect.TypeOf((*MockProver)(nil).RotateProof), slot)
 }
 
 // StepProof mocks base method.
-func (m *MockProver) StepProof(blocknumber *big.Int) ([32]byte, error) {
+func (m *MockProver) StepProof() ([32]byte, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "StepProof", blocknumber)
+	ret := m.ctrl.Call(m, "StepProof")
 	ret0, _ := ret[0].([32]byte)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // StepProof indicates an expected call of StepProof.
-func (mr *MockProverMockRecorder) StepProof(blocknumber any) *gomock.Call {
+func (mr *MockProverMockRecorder) StepProof() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StepProof", reflect.TypeOf((*MockProver)(nil).StepProof), blocknumber)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StepProof", reflect.TypeOf((*MockProver)(nil).StepProof))
 }

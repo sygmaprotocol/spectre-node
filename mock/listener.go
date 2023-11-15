@@ -15,7 +15,6 @@ import (
 
 	api "github.com/attestantio/go-eth2-client/api"
 	v1 "github.com/attestantio/go-eth2-client/api/v1"
-	spec "github.com/attestantio/go-eth2-client/spec"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -43,17 +42,17 @@ func (m *MockEventHandler) EXPECT() *MockEventHandlerMockRecorder {
 }
 
 // HandleEvents mocks base method.
-func (m *MockEventHandler) HandleEvents(startBlock, endBlock *big.Int) error {
+func (m *MockEventHandler) HandleEvents(arg0 *v1.Finality) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "HandleEvents", startBlock, endBlock)
+	ret := m.ctrl.Call(m, "HandleEvents", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // HandleEvents indicates an expected call of HandleEvents.
-func (mr *MockEventHandlerMockRecorder) HandleEvents(startBlock, endBlock any) *gomock.Call {
+func (mr *MockEventHandlerMockRecorder) HandleEvents(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HandleEvents", reflect.TypeOf((*MockEventHandler)(nil).HandleEvents), startBlock, endBlock)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HandleEvents", reflect.TypeOf((*MockEventHandler)(nil).HandleEvents), arg0)
 }
 
 // MockBeaconProvider is a mock of BeaconProvider interface.
@@ -92,21 +91,6 @@ func (m *MockBeaconProvider) Finality(ctx context.Context, opts *api.FinalityOpt
 func (mr *MockBeaconProviderMockRecorder) Finality(ctx, opts any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Finality", reflect.TypeOf((*MockBeaconProvider)(nil).Finality), ctx, opts)
-}
-
-// SignedBeaconBlock mocks base method.
-func (m *MockBeaconProvider) SignedBeaconBlock(ctx context.Context, opts *api.SignedBeaconBlockOpts) (*api.Response[*spec.VersionedSignedBeaconBlock], error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SignedBeaconBlock", ctx, opts)
-	ret0, _ := ret[0].(*api.Response[*spec.VersionedSignedBeaconBlock])
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// SignedBeaconBlock indicates an expected call of SignedBeaconBlock.
-func (mr *MockBeaconProviderMockRecorder) SignedBeaconBlock(ctx, opts any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignedBeaconBlock", reflect.TypeOf((*MockBeaconProvider)(nil).SignedBeaconBlock), ctx, opts)
 }
 
 // MockBlockStorer is a mock of BlockStorer interface.
