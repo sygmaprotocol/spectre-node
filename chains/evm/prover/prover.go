@@ -3,7 +3,6 @@ package prover
 import (
 	"context"
 	"fmt"
-	"net/rpc"
 
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -38,37 +37,36 @@ type BeaconClient interface {
 	Domain(ctx context.Context, domainType phase0.DomainType, epoch phase0.Epoch) (phase0.Domain, error)
 }
 
+type ProverClient interface {
+	Call(serviceMethod string, args any, reply any) error
+}
+
 type Prover struct {
 	lightClient  LightClient
 	beaconClient BeaconClient
-	proverClient *rpc.Client
+	proverClient ProverClient
 
-	spec          Spec
-	epochSize     uint64
-	committeeSize uint64
+	spec                  Spec
+	epochLength           uint64
+	committeePeriodLength uint64
 }
 
 func NewProver(
-	proverUrl string,
+	proverClient ProverClient,
 	beaconClient BeaconClient,
 	lightClient LightClient,
 	spec Spec,
-	epochSize uint64,
-	committeeSize uint64,
-) (*Prover, error) {
-	client, err := rpc.DialHTTP("tcp", proverUrl)
-	if err != nil {
-		return nil, err
-	}
-
+	epochLength uint64,
+	committeePeriodLength uint64,
+) *Prover {
 	return &Prover{
-		proverClient:  client,
-		spec:          spec,
-		epochSize:     epochSize,
-		committeeSize: committeeSize,
-		beaconClient:  beaconClient,
-		lightClient:   lightClient,
-	}, nil
+		proverClient:          proverClient,
+		spec:                  spec,
+		epochLength:           epochLength,
+		committeePeriodLength: committeePeriodLength,
+		beaconClient:          beaconClient,
+		lightClient:           lightClient,
+	}
 }
 
 // StepProof generates the proof for the sync step
@@ -120,7 +118,7 @@ func (p *Prover) stepArgs() (*StepArgs, error) {
 	}
 	pubkeys := bootstrap.CurrentSyncCommittee.PubKeys
 
-	domain, err := p.beaconClient.Domain(context.Background(), phase0.DomainType{}, phase0.Epoch(update.FinalizedHeader.Header.Slot/32))
+	domain, err := p.beaconClient.Domain(context.Background(), SYNC_COMMITTEE_DOMAIN, phase0.Epoch(update.FinalizedHeader.Header.Slot/32))
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +132,7 @@ func (p *Prover) stepArgs() (*StepArgs, error) {
 }
 
 func (p *Prover) rotateArgs(slot uint64) (*RotateArgs, error) {
-	period := slot / p.epochSize / p.committeeSize
+	period := slot / p.epochLength / p.committeePeriodLength
 	updates, err := p.lightClient.Updates(period)
 	if err != nil {
 		return nil, err

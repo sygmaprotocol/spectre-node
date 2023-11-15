@@ -1,0 +1,194 @@
+package prover_test
+
+import (
+	"fmt"
+	"testing"
+
+	"github.com/attestantio/go-eth2-client/api"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/stretchr/testify/suite"
+	"github.com/sygmaprotocol/spectre-node/chains/evm/prover"
+	"github.com/sygmaprotocol/spectre-node/mock"
+	consensus "github.com/umbracle/go-eth-consensus"
+	"go.uber.org/mock/gomock"
+)
+
+type ProverTestSuite struct {
+	suite.Suite
+
+	prover           *prover.Prover
+	lightClientMock  *mock.MockLightClient
+	proverClientMock *mock.MockProverClient
+	beaconClientMock *mock.MockBeaconClient
+}
+
+func TestRunProverTestSuite(t *testing.T) {
+	suite.Run(t, new(ProverTestSuite))
+}
+
+func (s *ProverTestSuite) SetupTest() {
+	ctrl := gomock.NewController(s.T())
+	s.lightClientMock = mock.NewMockLightClient(ctrl)
+	s.proverClientMock = mock.NewMockProverClient(ctrl)
+	s.beaconClientMock = mock.NewMockBeaconClient(ctrl)
+	s.prover = prover.NewProver(s.proverClientMock, s.beaconClientMock, s.lightClientMock, prover.MAINNET_SPEC, 32, 256)
+}
+
+func (s *ProverTestSuite) Test_StepProof_InvalidFinalityUpdate() {
+	s.lightClientMock.EXPECT().FinalityUpdate().Return(nil, fmt.Errorf("error"))
+
+	_, err := s.prover.StepProof()
+
+	s.NotNil(err)
+}
+
+func (s *ProverTestSuite) Test_StepProof_InvalidBlockRoot() {
+	s.lightClientMock.EXPECT().FinalityUpdate().Return(&consensus.LightClientFinalityUpdateCapella{
+		FinalizedHeader: &consensus.LightClientHeaderCapella{
+			Header: &consensus.BeaconBlockHeader{
+				Slot: 10,
+			},
+		},
+	}, nil)
+	s.beaconClientMock.EXPECT().BeaconBlockRoot(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("error"))
+
+	_, err := s.prover.StepProof()
+
+	s.NotNil(err)
+}
+
+func (s *ProverTestSuite) Test_StepProof_InvalidBoostrap() {
+	s.lightClientMock.EXPECT().FinalityUpdate().Return(&consensus.LightClientFinalityUpdateCapella{
+		FinalizedHeader: &consensus.LightClientHeaderCapella{
+			Header: &consensus.BeaconBlockHeader{
+				Slot: 10,
+			},
+		},
+	}, nil)
+	s.beaconClientMock.EXPECT().BeaconBlockRoot(gomock.Any(), gomock.Any()).Return(&api.Response[*phase0.Root]{
+		Data: &phase0.Root{},
+	}, nil)
+	s.lightClientMock.EXPECT().Bootstrap(gomock.Any()).Return(nil, fmt.Errorf("error"))
+
+	_, err := s.prover.StepProof()
+
+	s.NotNil(err)
+}
+
+func (s *ProverTestSuite) Test_StepProof_InvalidDomain() {
+	s.lightClientMock.EXPECT().FinalityUpdate().Return(&consensus.LightClientFinalityUpdateCapella{
+		FinalizedHeader: &consensus.LightClientHeaderCapella{
+			Header: &consensus.BeaconBlockHeader{
+				Slot: 10,
+			},
+		},
+	}, nil)
+	s.beaconClientMock.EXPECT().BeaconBlockRoot(gomock.Any(), gomock.Any()).Return(&api.Response[*phase0.Root]{
+		Data: &phase0.Root{},
+	}, nil)
+	s.lightClientMock.EXPECT().Bootstrap(gomock.Any()).Return(&consensus.LightClientBootstrapCapella{
+		CurrentSyncCommittee: &consensus.SyncCommittee{
+			PubKeys: [512][48]byte{},
+		},
+	}, nil)
+	s.beaconClientMock.EXPECT().Domain(gomock.Any(), gomock.Any(), gomock.Any()).Return(phase0.Domain{}, fmt.Errorf("error"))
+
+	_, err := s.prover.StepProof()
+
+	s.NotNil(err)
+}
+
+func (s *ProverTestSuite) Test_StepProof_InvalidProof() {
+	s.lightClientMock.EXPECT().FinalityUpdate().Return(&consensus.LightClientFinalityUpdateCapella{
+		FinalizedHeader: &consensus.LightClientHeaderCapella{
+			Header: &consensus.BeaconBlockHeader{
+				Slot: 10,
+			},
+		},
+	}, nil)
+	s.beaconClientMock.EXPECT().BeaconBlockRoot(gomock.Any(), gomock.Any()).Return(&api.Response[*phase0.Root]{
+		Data: &phase0.Root{},
+	}, nil)
+	s.lightClientMock.EXPECT().Bootstrap(gomock.Any()).Return(&consensus.LightClientBootstrapCapella{
+		CurrentSyncCommittee: &consensus.SyncCommittee{
+			PubKeys: [512][48]byte{},
+		},
+	}, nil)
+	s.beaconClientMock.EXPECT().Domain(gomock.Any(), gomock.Any(), gomock.Any()).Return(phase0.Domain{}, nil)
+	s.proverClientMock.EXPECT().Call("genEvmProofAndInstancesStepSyncCircuit", gomock.Any(), gomock.Any()).Return(fmt.Errorf("error"))
+
+	_, err := s.prover.StepProof()
+
+	s.NotNil(err)
+}
+
+func (s *ProverTestSuite) Test_StepProof_ValidProof() {
+	update := &consensus.LightClientFinalityUpdateCapella{
+		FinalizedHeader: &consensus.LightClientHeaderCapella{
+			Header: &consensus.BeaconBlockHeader{
+				Slot: 10,
+			},
+		},
+	}
+	s.lightClientMock.EXPECT().FinalityUpdate().Return(update, nil)
+	s.beaconClientMock.EXPECT().BeaconBlockRoot(gomock.Any(), gomock.Any()).Return(&api.Response[*phase0.Root]{
+		Data: &phase0.Root{},
+	}, nil)
+	s.lightClientMock.EXPECT().Bootstrap(gomock.Any()).Return(&consensus.LightClientBootstrapCapella{
+		CurrentSyncCommittee: &consensus.SyncCommittee{
+			PubKeys: [512][48]byte{{1}},
+		},
+	}, nil)
+	s.beaconClientMock.EXPECT().Domain(gomock.Any(), gomock.Any(), gomock.Any()).Return(phase0.Domain{}, nil)
+	s.proverClientMock.EXPECT().Call("genEvmProofAndInstancesStepSyncCircuit", &prover.StepArgs{
+		Update:  update,
+		Pubkeys: [512][48]byte{{1}},
+		Domain:  phase0.Domain{},
+		Spec:    prover.MAINNET_SPEC,
+	}, gomock.Any()).Return(nil)
+
+	_, err := s.prover.StepProof()
+
+	s.Nil(err)
+}
+
+func (s *ProverTestSuite) Test_RotateProof_InvalidUpdate() {
+	s.lightClientMock.EXPECT().Updates(gomock.Any()).Return([]*consensus.LightClientUpdateCapella{}, fmt.Errorf("error"))
+
+	_, err := s.prover.RotateProof(1000)
+
+	s.NotNil(err)
+}
+
+func (s *ProverTestSuite) Test_RotateProof_MissingUpdates() {
+	s.lightClientMock.EXPECT().Updates(gomock.Any()).Return([]*consensus.LightClientUpdateCapella{}, nil)
+
+	_, err := s.prover.RotateProof(1000)
+
+	s.NotNil(err)
+}
+
+func (s *ProverTestSuite) Test_RotateProof_InvalidProof() {
+	s.lightClientMock.EXPECT().Updates(gomock.Any()).Return([]*consensus.LightClientUpdateCapella{{}}, nil)
+	s.proverClientMock.EXPECT().Call("genEvmProofAndInstancesRotationCircuit", gomock.Any(), gomock.Any()).Return(fmt.Errorf("error"))
+
+	_, err := s.prover.RotateProof(1000)
+
+	s.NotNil(err)
+}
+
+func (s *ProverTestSuite) Test_RotateProof_ValidProof() {
+	s.lightClientMock.EXPECT().Updates(uint64(1)).Return([]*consensus.LightClientUpdateCapella{{
+		FinalityBranch: [][32]byte{{1}},
+	}}, nil)
+	s.proverClientMock.EXPECT().Call("genEvmProofAndInstancesRotationCircuit", &prover.RotateArgs{
+		Update: &consensus.LightClientUpdateCapella{
+			FinalityBranch: [][32]byte{{1}},
+		},
+		Spec: prover.MAINNET_SPEC,
+	}, gomock.Any()).Return(nil)
+
+	_, err := s.prover.RotateProof(10000)
+
+	s.Nil(err)
+}
