@@ -32,14 +32,19 @@ func (c *LightClient) Updates(period uint64) ([]*consensus.LightClientUpdateCape
 	defer resp.Body.Close()
 
 	type response struct {
-		Data []*consensus.LightClientUpdateCapella `json:"data,omitempty"`
+		Data *consensus.LightClientUpdateCapella `json:"data"`
 	}
-	var apiResponse response
+	apiResponse := make([]response, 0)
 	if err := c.decodeResp(resp, &apiResponse); err != nil {
 		return nil, err
 	}
 
-	return apiResponse.Data, err
+	updates := make([]*consensus.LightClientUpdateCapella, len(apiResponse))
+	for i, update := range apiResponse {
+		updates[i] = update.Data
+	}
+
+	return updates, err
 }
 
 // FinalityUpdate returns the latest finalized light client update
