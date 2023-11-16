@@ -6,7 +6,6 @@ package handlers_test
 import (
 	"context"
 	"fmt"
-	"math/big"
 	"testing"
 
 	"github.com/attestantio/go-eth2-client/api"
@@ -14,6 +13,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/suite"
 	"github.com/sygmaprotocol/spectre-node/chains/evm/listener/events/handlers"
+	"github.com/sygmaprotocol/spectre-node/chains/evm/prover"
 	"github.com/sygmaprotocol/spectre-node/mock"
 	"github.com/sygmaprotocol/sygma-core/relayer/message"
 	"go.uber.org/mock/gomock"
@@ -50,7 +50,11 @@ func (s *RotateHandlerTestSuite) SetupTest() {
 func (s *RotateHandlerTestSuite) Test_HandleEvents_FetchingCommitteeFails() {
 	s.mockSyncCommitteeFetcher.EXPECT().SyncCommittee(context.Background(), gomock.Any()).Return(nil, fmt.Errorf("error"))
 
-	err := s.handler.HandleEvents(nil)
+	err := s.handler.HandleEvents(&apiv1.Finality{
+		Justified: &phase0.Checkpoint{
+			Root: phase0.Root{},
+		},
+	})
 	s.NotNil(err)
 
 	_, err = readFromChannel(s.msgChan)
@@ -62,7 +66,11 @@ func (s *RotateHandlerTestSuite) Test_HandleEvents_SyncCommitteeNotChanged() {
 		Data: &apiv1.SyncCommittee{},
 	}, nil)
 
-	err := s.handler.HandleEvents(nil)
+	err := s.handler.HandleEvents(&apiv1.Finality{
+		Justified: &phase0.Checkpoint{
+			Root: phase0.Root{},
+		},
+	})
 	s.Nil(err)
 
 	_, err = readFromChannel(s.msgChan)
@@ -70,15 +78,18 @@ func (s *RotateHandlerTestSuite) Test_HandleEvents_SyncCommitteeNotChanged() {
 }
 
 func (s *RotateHandlerTestSuite) Test_HandleEvents_NewSyncCommittee_ProofFails() {
-	endBlock := big.NewInt(4)
 	s.mockSyncCommitteeFetcher.EXPECT().SyncCommittee(context.Background(), gomock.Any()).Return(&api.Response[*apiv1.SyncCommittee]{
 		Data: &apiv1.SyncCommittee{
 			Validators: []phase0.ValidatorIndex{128},
 		},
 	}, nil)
-	s.mockProver.EXPECT().StepProof().Return([32]byte{}, fmt.Errorf("error"))
+	s.mockProver.EXPECT().StepProof().Return(nil, fmt.Errorf("error"))
 
-	err := s.handler.HandleEvents(nil)
+	err := s.handler.HandleEvents(&apiv1.Finality{
+		Justified: &phase0.Checkpoint{
+			Root: phase0.Root{},
+		},
+	})
 	s.NotNil(err)
 	_, err = readFromChannel(s.msgChan)
 	s.NotNil(err)
@@ -88,26 +99,33 @@ func (s *RotateHandlerTestSuite) Test_HandleEvents_NewSyncCommittee_ProofFails()
 			Validators: []phase0.ValidatorIndex{128},
 		},
 	}, nil)
-	s.mockProver.EXPECT().StepProof().Return([32]byte{}, nil)
-	s.mockProver.EXPECT().RotateProof(endBlock).Return([32]byte{}, fmt.Errorf("error"))
+	s.mockProver.EXPECT().StepProof().Return(&prover.EvmProof{}, nil)
+	s.mockProver.EXPECT().RotateProof(uint64(100)).Return(nil, fmt.Errorf("error"))
 
-	err = s.handler.HandleEvents(nil)
+	err = s.handler.HandleEvents(&apiv1.Finality{
+		Finalized: &phase0.Checkpoint{
+			Epoch: 100,
+		},
+	})
 	s.NotNil(err)
 	_, err = readFromChannel(s.msgChan)
 	s.NotNil(err)
 }
 
 func (s *RotateHandlerTestSuite) Test_HandleEvents_NewSyncCommittee() {
-	endBlock := big.NewInt(4)
 	s.mockSyncCommitteeFetcher.EXPECT().SyncCommittee(context.Background(), gomock.Any()).Return(&api.Response[*apiv1.SyncCommittee]{
 		Data: &apiv1.SyncCommittee{
 			Validators: []phase0.ValidatorIndex{128},
 		},
 	}, nil)
-	s.mockProver.EXPECT().StepProof().Return([32]byte{1}, nil)
-	s.mockProver.EXPECT().RotateProof(endBlock).Return([32]byte{1}, nil)
+	s.mockProver.EXPECT().StepProof().Return(&prover.EvmProof{}, nil)
+	s.mockProver.EXPECT().RotateProof(uint64(100)).Return(&prover.EvmProof{}, nil)
 
-	err := s.handler.HandleEvents(nil)
+	err := s.handler.HandleEvents(&apiv1.Finality{
+		Finalized: &phase0.Checkpoint{
+			Epoch: 100,
+		},
+	})
 	s.Nil(err)
 
 	msgs, err := readFromChannel(s.msgChan)

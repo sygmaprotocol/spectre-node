@@ -29,7 +29,7 @@ type EventFetcher interface {
 
 type Prover interface {
 	StepProof() (*prover.EvmProof, error)
-	RotateProof(slot uint64) (*prover.EvmProof, error)
+	RotateProof(epoch uint64) (*prover.EvmProof, error)
 }
 
 type BlockFetcher interface {
