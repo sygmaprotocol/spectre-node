@@ -53,6 +53,7 @@ func (s *EVMConfigTestSuite) Test_LoadEVMConfig_SuccessfulLoad_DefaultValues() {
 		},
 		Router:                "router",
 		Spectre:               "spectre",
+		Spec:                  "mainnet",
 		BlockInterval:         32,
 		GasMultiplier:         1,
 		GasIncreasePercentage: 15,
@@ -72,6 +73,7 @@ func (s *EVMConfigTestSuite) Test_LoadEVMConfig_SuccessfulLoad() {
 	os.Setenv("SPECTRE_DOMAINS_1_MAX_GAS_PRICE", "1000")
 	os.Setenv("SPECTRE_DOMAINS_1_BLOCK_INTERVAL", "10")
 	os.Setenv("SPECTRE_DOMAINS_1_GAS_MULTIPLIER", "1")
+	os.Setenv("SPECTRE_DOMAINS_1_SPEC", "testnet")
 	os.Setenv("SPECTRE_DOMAINS_1_GAS_INCREASE_PERCENTAGE", "20")
 	os.Setenv("SPECTRE_DOMAINS_1_RETRY_INTERVAL", "30")
 	os.Setenv("SPECTRE_DOMAINS_1_COMMITTEE_PERIOD_LENGTH", "128")
@@ -87,6 +89,7 @@ func (s *EVMConfigTestSuite) Test_LoadEVMConfig_SuccessfulLoad() {
 		},
 		Router:                "router",
 		Spectre:               "spectre",
+		Spec:                  "testnet",
 		BlockInterval:         10,
 		GasMultiplier:         1,
 		GasIncreasePercentage: 20,

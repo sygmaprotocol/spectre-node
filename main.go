@@ -100,7 +100,7 @@ func main() {
 					panic(err)
 				}
 				lightClient := lightclient.NewLightClient(config.BeaconEndpoint)
-				p := prover.NewProver(proverClient, beaconProvider, lightClient, prover.TESTNET_SPEC, config.CommitteePeriodLength)
+				p := prover.NewProver(proverClient, beaconProvider, lightClient, prover.Spec(config.Spec), config.CommitteePeriodLength)
 				routerAddress := common.HexToAddress(config.Router)
 				depositHandler := handlers.NewDepositEventHandler(msgChan, client, beaconProvider, p, routerAddress, id, config.BlockInterval)
 				rotateHandler := handlers.NewRotateHandler(msgChan, beaconProvider, p, id, domains)
