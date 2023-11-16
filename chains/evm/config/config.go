@@ -14,11 +14,13 @@ type EVMConfig struct {
 	config.BaseNetworkConfig
 	BeaconEndpoint        string  `required:"true"`
 	Router                string  `required:"true"`
-	Executor              string  `required:"true"`
+	Spectre               string  `required:"true"`
 	MaxGasPrice           int64   `default:"500000000000"`
+	BlockInterval         uint64  `default:"32"`
 	GasMultiplier         float64 `default:"1"`
 	GasIncreasePercentage int64   `default:"15"`
 	RetryInterval         uint64  `default:"12"`
+	CommitteePeriodLength uint64  `default:"256"`
 }
 
 // LoadEVMConfig loads EVM config from the environment and validates the fields

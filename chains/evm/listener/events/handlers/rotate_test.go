@@ -43,7 +43,7 @@ func (s *RotateHandlerTestSuite) SetupTest() {
 		s.mockSyncCommitteeFetcher,
 		s.mockProver,
 		1,
-		[]uint8{2, 3},
+		[]uint8{1, 2, 3},
 	)
 }
 

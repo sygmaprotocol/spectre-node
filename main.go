@@ -7,16 +7,24 @@ import (
 	"context"
 	"fmt"
 	"math/big"
+	"net/rpc"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
 	"github.com/attestantio/go-eth2-client/http"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	evmConfig "github.com/sygmaprotocol/spectre-node/chains/evm/config"
+	"github.com/sygmaprotocol/spectre-node/chains/evm/contracts"
+	"github.com/sygmaprotocol/spectre-node/chains/evm/executor"
+	"github.com/sygmaprotocol/spectre-node/chains/evm/lightclient"
 	"github.com/sygmaprotocol/spectre-node/chains/evm/listener"
+	"github.com/sygmaprotocol/spectre-node/chains/evm/listener/events/handlers"
+	evmMessage "github.com/sygmaprotocol/spectre-node/chains/evm/message"
+	"github.com/sygmaprotocol/spectre-node/chains/evm/prover"
 	"github.com/sygmaprotocol/spectre-node/config"
 	"github.com/sygmaprotocol/sygma-core/chains/evm"
 	"github.com/sygmaprotocol/sygma-core/chains/evm/client"
@@ -43,11 +51,16 @@ func main() {
 
 	log.Info().Msg("Loaded configuration")
 
+	domains := make([]uint8, 0)
+	for domain := range cfg.Domains {
+		domains = append(domains, domain)
+	}
+
 	msgChan := make(chan []*message.Message)
 	chains := make(map[uint8]relayer.RelayedChain)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	for id, nType := range cfg.Chains {
+	for id, nType := range cfg.Domains {
 		switch nType {
 		case "evm":
 			{
@@ -81,9 +94,29 @@ func main() {
 					panic(err)
 				}
 				beaconProvider := beaconClient.(*http.Service)
-				listener := listener.NewEVMListener(beaconProvider, []listener.EventHandler{}, id, time.Duration(config.RetryInterval)*time.Second)
 
-				chain := evm.NewEVMChain(listener, nil, nil, id, nil)
+				proverClient, err := rpc.DialHTTP("tcp", cfg.Prover.URL)
+				if err != nil {
+					panic(err)
+				}
+				lightClient := lightclient.NewLightClient(config.BeaconEndpoint)
+				p := prover.NewProver(proverClient, beaconProvider, lightClient, prover.TESTNET_SPEC, config.CommitteePeriodLength)
+				routerAddress := common.HexToAddress(config.Router)
+				depositHandler := handlers.NewDepositEventHandler(msgChan, client, beaconProvider, p, routerAddress, id, config.BlockInterval)
+				rotateHandler := handlers.NewRotateHandler(msgChan, beaconProvider, p, id, domains)
+				listener := listener.NewEVMListener(beaconProvider, []listener.EventHandler{depositHandler, rotateHandler}, id, time.Duration(config.RetryInterval)*time.Second)
+
+				messageHandler := message.NewMessageHandler()
+
+				rotateMessageHandler := evmMessage.EvmRotateHandler{}
+				stepMessageHandler := evmMessage.EvmStepHandler{}
+				messageHandler.RegisterMessageHandler(evmMessage.EVMRotateMessage, &rotateMessageHandler)
+				messageHandler.RegisterMessageHandler(evmMessage.EVMStepMessage, &stepMessageHandler)
+
+				spectre := contracts.NewSpectreContract(common.HexToAddress(config.Spectre), t)
+				executor := executor.NewEVMExecutor(id, spectre)
+
+				chain := evm.NewEVMChain(listener, messageHandler, executor, id, nil)
 				chains[id] = chain
 			}
 		default:

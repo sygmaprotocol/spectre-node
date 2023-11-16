@@ -10,7 +10,7 @@ const PREFIX = "SPECTRE"
 type Config struct {
 	Observability *Observability   `env_config:"observability"`
 	Prover        *Prover          `env_config:"prover"`
-	Chains        map[uint8]string `required:"true"`
+	Domains       map[uint8]string `required:"true"`
 }
 
 type Observability struct {
