@@ -20,6 +20,10 @@ func TestRunEVMConfigTestSuite(t *testing.T) {
 	suite.Run(t, new(EVMConfigTestSuite))
 }
 
+func (c *EVMConfigTestSuite) TearDownTest() {
+	os.Clearenv()
+}
+
 func (s *EVMConfigTestSuite) Test_LoadEVMConfig_MissingField() {
 	os.Setenv("SPECTRE_DOMAINS_1_ID", "1")
 	os.Setenv("SPECTRE_DOMAINS_1_ENDPOINT", "http://endpoint.com")
