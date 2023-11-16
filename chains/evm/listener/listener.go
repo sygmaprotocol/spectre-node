@@ -33,7 +33,6 @@ type EVMListener struct {
 
 	domainID      uint8
 	retryInterval time.Duration
-	blockInterval *big.Int
 
 	log zerolog.Logger
 }
@@ -45,7 +44,7 @@ func NewEVMListener(
 	eventHandlers []EventHandler,
 	domainID uint8,
 	retryInterval time.Duration,
-	blockInterval *big.Int) *EVMListener {
+) *EVMListener {
 	logger := log.With().Uint8("domainID", domainID).Logger()
 	return &EVMListener{
 		log:            logger,
@@ -53,7 +52,6 @@ func NewEVMListener(
 		eventHandlers:  eventHandlers,
 		domainID:       domainID,
 		retryInterval:  retryInterval,
-		blockInterval:  blockInterval,
 	}
 }
 

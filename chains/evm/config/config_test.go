@@ -49,8 +49,7 @@ func (s *EVMConfigTestSuite) Test_LoadEVMConfig_SuccessfulLoad() {
 			Key:      "key",
 			Endpoint: "http://endpoint.com",
 		},
-		Router:             "router",
-		Executor:           "executor",
-		BlockConfirmations: 5,
+		Router:   "router",
+		Executor: "executor",
 	})
 }

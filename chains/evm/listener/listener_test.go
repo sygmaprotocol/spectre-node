@@ -41,7 +41,7 @@ func (s *ListenerTestSuite) SetupTest() {
 		[]listener.EventHandler{s.mockEventHandler, s.mockEventHandler},
 		1,
 		time.Millisecond*50,
-		big.NewInt(32))
+	)
 }
 
 func (s *ListenerTestSuite) Test_ListenToEvents_CheckpointUnavailable() {
