@@ -10,12 +10,18 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/spec"
+	"github.com/attestantio/go-eth2-client/spec/capella"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/suite"
 	"github.com/sygmaprotocol/spectre-node/chains/evm/listener/events"
 	"github.com/sygmaprotocol/spectre-node/chains/evm/listener/events/handlers"
 	evmMessage "github.com/sygmaprotocol/spectre-node/chains/evm/message"
+	"github.com/sygmaprotocol/spectre-node/chains/evm/prover"
 	"github.com/sygmaprotocol/spectre-node/mock"
 	"github.com/sygmaprotocol/sygma-core/relayer/message"
 	"go.uber.org/mock/gomock"
@@ -67,9 +73,42 @@ func (s *DepositHandlerTestSuite) SetupTest() {
 		32)
 }
 
+func (s *DepositHandlerTestSuite) Test_HandleEvents_FetchingBlockRangeFails() {
+	s.mockBlockFetcher.EXPECT().SignedBeaconBlock(
+		context.Background(),
+		gomock.Any(),
+	).Return(nil, fmt.Errorf("Error"))
+
+	err := s.depositHandler.HandleEvents(&apiv1.Finality{
+		Justified: &phase0.Checkpoint{
+			Root: phase0.Root{},
+		},
+	})
+	s.NotNil(err)
+
+	_, err = readFromChannel(s.msgChan)
+	s.NotNil(err)
+}
+
 func (s *DepositHandlerTestSuite) Test_HandleEvents_FetchingDepositsFails() {
-	startBlock := big.NewInt(0)
-	endBlock := big.NewInt(4)
+	startBlock := big.NewInt(32)
+	endBlock := big.NewInt(64)
+	s.mockBlockFetcher.EXPECT().SignedBeaconBlock(
+		context.Background(),
+		gomock.Any(),
+	).Return(&api.Response[*spec.VersionedSignedBeaconBlock]{
+		Data: &spec.VersionedSignedBeaconBlock{
+			Capella: &capella.SignedBeaconBlock{
+				Message: &capella.BeaconBlock{
+					Body: &capella.BeaconBlockBody{
+						ExecutionPayload: &capella.ExecutionPayload{
+							BlockNumber: 64,
+						},
+					},
+				},
+			},
+		},
+	}, nil)
 	s.mockEventFetcher.EXPECT().FetchEventLogs(
 		context.Background(),
 		gomock.Any(),
@@ -78,7 +117,11 @@ func (s *DepositHandlerTestSuite) Test_HandleEvents_FetchingDepositsFails() {
 		endBlock,
 	).Return(nil, fmt.Errorf("Error"))
 
-	err := s.depositHandler.HandleEvents(nil)
+	err := s.depositHandler.HandleEvents(&apiv1.Finality{
+		Justified: &phase0.Checkpoint{
+			Root: phase0.Root{},
+		},
+	})
 	s.NotNil(err)
 
 	_, err = readFromChannel(s.msgChan)
@@ -86,8 +129,24 @@ func (s *DepositHandlerTestSuite) Test_HandleEvents_FetchingDepositsFails() {
 }
 
 func (s *DepositHandlerTestSuite) Test_HandleEvents_NoEvents_MessageNotSent() {
-	startBlock := big.NewInt(0)
-	endBlock := big.NewInt(4)
+	startBlock := big.NewInt(32)
+	endBlock := big.NewInt(64)
+	s.mockBlockFetcher.EXPECT().SignedBeaconBlock(
+		context.Background(),
+		gomock.Any(),
+	).Return(&api.Response[*spec.VersionedSignedBeaconBlock]{
+		Data: &spec.VersionedSignedBeaconBlock{
+			Capella: &capella.SignedBeaconBlock{
+				Message: &capella.BeaconBlock{
+					Body: &capella.BeaconBlockBody{
+						ExecutionPayload: &capella.ExecutionPayload{
+							BlockNumber: 64,
+						},
+					},
+				},
+			},
+		},
+	}, nil)
 	s.mockEventFetcher.EXPECT().FetchEventLogs(
 		context.Background(),
 		gomock.Any(),
@@ -96,7 +155,11 @@ func (s *DepositHandlerTestSuite) Test_HandleEvents_NoEvents_MessageNotSent() {
 		endBlock,
 	).Return(make([]types.Log, 0), nil)
 
-	err := s.depositHandler.HandleEvents(nil)
+	err := s.depositHandler.HandleEvents(&apiv1.Finality{
+		Justified: &phase0.Checkpoint{
+			Root: phase0.Root{},
+		},
+	})
 	s.Nil(err)
 
 	_, err = readFromChannel(s.msgChan)
@@ -107,9 +170,25 @@ func (s *DepositHandlerTestSuite) Test_HandleEvents_ValidDeposit_ProverFails() {
 	validDepositData, _ := hex.DecodeString("000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000000")
 	invalidDepositData := []byte("invalid")
 
-	startBlock := big.NewInt(0)
-	endBlock := big.NewInt(4)
-	s.mockStepProver.EXPECT().StepProof().Return([32]byte{}, fmt.Errorf("error"))
+	startBlock := big.NewInt(32)
+	endBlock := big.NewInt(64)
+	s.mockBlockFetcher.EXPECT().SignedBeaconBlock(
+		context.Background(),
+		gomock.Any(),
+	).Return(&api.Response[*spec.VersionedSignedBeaconBlock]{
+		Data: &spec.VersionedSignedBeaconBlock{
+			Capella: &capella.SignedBeaconBlock{
+				Message: &capella.BeaconBlock{
+					Body: &capella.BeaconBlockBody{
+						ExecutionPayload: &capella.ExecutionPayload{
+							BlockNumber: 64,
+						},
+					},
+				},
+			},
+		},
+	}, nil)
+	s.mockStepProver.EXPECT().StepProof().Return(nil, fmt.Errorf("error"))
 	s.mockEventFetcher.EXPECT().FetchEventLogs(
 		context.Background(),
 		gomock.Any(),
@@ -129,7 +208,11 @@ func (s *DepositHandlerTestSuite) Test_HandleEvents_ValidDeposit_ProverFails() {
 		},
 	}, nil)
 
-	err := s.depositHandler.HandleEvents(nil)
+	err := s.depositHandler.HandleEvents(&apiv1.Finality{
+		Justified: &phase0.Checkpoint{
+			Root: phase0.Root{},
+		},
+	})
 	s.NotNil(err)
 
 	_, err = readFromChannel(s.msgChan)
@@ -140,9 +223,25 @@ func (s *DepositHandlerTestSuite) Test_HandleEvents_ValidDeposit() {
 	validDepositData, _ := hex.DecodeString("000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000000")
 	invalidDepositData := []byte("invalid")
 
-	startBlock := big.NewInt(0)
-	endBlock := big.NewInt(4)
-	s.mockStepProver.EXPECT().StepProof().Return(SliceTo32Bytes([]byte("step data")), nil)
+	startBlock := big.NewInt(32)
+	endBlock := big.NewInt(64)
+	s.mockBlockFetcher.EXPECT().SignedBeaconBlock(
+		context.Background(),
+		gomock.Any(),
+	).Return(&api.Response[*spec.VersionedSignedBeaconBlock]{
+		Data: &spec.VersionedSignedBeaconBlock{
+			Capella: &capella.SignedBeaconBlock{
+				Message: &capella.BeaconBlock{
+					Body: &capella.BeaconBlockBody{
+						ExecutionPayload: &capella.ExecutionPayload{
+							BlockNumber: 64,
+						},
+					},
+				},
+			},
+		},
+	}, nil)
+	s.mockStepProver.EXPECT().StepProof().Return(&prover.EvmProof{}, nil)
 	s.mockEventFetcher.EXPECT().FetchEventLogs(
 		context.Background(),
 		gomock.Any(),
@@ -162,7 +261,11 @@ func (s *DepositHandlerTestSuite) Test_HandleEvents_ValidDeposit() {
 		},
 	}, nil)
 
-	err := s.depositHandler.HandleEvents(nil)
+	err := s.depositHandler.HandleEvents(&apiv1.Finality{
+		Justified: &phase0.Checkpoint{
+			Root: phase0.Root{},
+		},
+	})
 	s.Nil(err)
 
 	msgs, err := readFromChannel(s.msgChan)
@@ -170,8 +273,6 @@ func (s *DepositHandlerTestSuite) Test_HandleEvents_ValidDeposit() {
 	s.Equal(msgs[0], evmMessage.NewEvmStepMessage(
 		1,
 		2,
-		evmMessage.StepData{
-			Proof: SliceTo32Bytes([]byte("step data")),
-		},
+		evmMessage.StepData{},
 	))
 }
