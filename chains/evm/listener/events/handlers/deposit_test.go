@@ -43,6 +43,7 @@ type DepositHandlerTestSuite struct {
 
 	msgChan          chan []*message.Message
 	mockEventFetcher *mock.MockEventFetcher
+	mockBlockFetcher *mock.MockBlockFetcher
 	mockStepProver   *mock.MockProver
 }
 
@@ -54,13 +55,16 @@ func (s *DepositHandlerTestSuite) SetupTest() {
 	ctrl := gomock.NewController(s.T())
 	s.mockEventFetcher = mock.NewMockEventFetcher(ctrl)
 	s.mockStepProver = mock.NewMockProver(ctrl)
+	s.mockBlockFetcher = mock.NewMockBlockFetcher(ctrl)
 	s.msgChan = make(chan []*message.Message, 1)
 	s.depositHandler = handlers.NewDepositEventHandler(
 		s.msgChan,
 		s.mockEventFetcher,
+		s.mockBlockFetcher,
 		s.mockStepProver,
 		common.HexToAddress("0xb0b13f0109ef097C3Aa70Fb543EA4942114A845d"),
-		1)
+		1,
+		32)
 }
 
 func (s *DepositHandlerTestSuite) Test_HandleEvents_FetchingDepositsFails() {
@@ -74,7 +78,7 @@ func (s *DepositHandlerTestSuite) Test_HandleEvents_FetchingDepositsFails() {
 		endBlock,
 	).Return(nil, fmt.Errorf("Error"))
 
-	err := s.depositHandler.HandleEvents(startBlock, endBlock)
+	err := s.depositHandler.HandleEvents(nil)
 	s.NotNil(err)
 
 	_, err = readFromChannel(s.msgChan)
@@ -92,7 +96,7 @@ func (s *DepositHandlerTestSuite) Test_HandleEvents_NoEvents_MessageNotSent() {
 		endBlock,
 	).Return(make([]types.Log, 0), nil)
 
-	err := s.depositHandler.HandleEvents(startBlock, endBlock)
+	err := s.depositHandler.HandleEvents(nil)
 	s.Nil(err)
 
 	_, err = readFromChannel(s.msgChan)
@@ -105,7 +109,7 @@ func (s *DepositHandlerTestSuite) Test_HandleEvents_ValidDeposit_ProverFails() {
 
 	startBlock := big.NewInt(0)
 	endBlock := big.NewInt(4)
-	s.mockStepProver.EXPECT().StepProof(endBlock).Return([32]byte{}, fmt.Errorf("error"))
+	s.mockStepProver.EXPECT().StepProof().Return([32]byte{}, fmt.Errorf("error"))
 	s.mockEventFetcher.EXPECT().FetchEventLogs(
 		context.Background(),
 		gomock.Any(),
@@ -125,7 +129,7 @@ func (s *DepositHandlerTestSuite) Test_HandleEvents_ValidDeposit_ProverFails() {
 		},
 	}, nil)
 
-	err := s.depositHandler.HandleEvents(startBlock, endBlock)
+	err := s.depositHandler.HandleEvents(nil)
 	s.NotNil(err)
 
 	_, err = readFromChannel(s.msgChan)
@@ -138,7 +142,7 @@ func (s *DepositHandlerTestSuite) Test_HandleEvents_ValidDeposit() {
 
 	startBlock := big.NewInt(0)
 	endBlock := big.NewInt(4)
-	s.mockStepProver.EXPECT().StepProof(endBlock).Return(SliceTo32Bytes([]byte("step data")), nil)
+	s.mockStepProver.EXPECT().StepProof().Return(SliceTo32Bytes([]byte("step data")), nil)
 	s.mockEventFetcher.EXPECT().FetchEventLogs(
 		context.Background(),
 		gomock.Any(),
@@ -158,7 +162,7 @@ func (s *DepositHandlerTestSuite) Test_HandleEvents_ValidDeposit() {
 		},
 	}, nil)
 
-	err := s.depositHandler.HandleEvents(startBlock, endBlock)
+	err := s.depositHandler.HandleEvents(nil)
 	s.Nil(err)
 
 	msgs, err := readFromChannel(s.msgChan)

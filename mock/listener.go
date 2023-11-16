@@ -42,17 +42,17 @@ func (m *MockEventHandler) EXPECT() *MockEventHandlerMockRecorder {
 }
 
 // HandleEvents mocks base method.
-func (m *MockEventHandler) HandleEvents(arg0 *v1.Finality) error {
+func (m *MockEventHandler) HandleEvents(checkpoint *v1.Finality) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "HandleEvents", arg0)
+	ret := m.ctrl.Call(m, "HandleEvents", checkpoint)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // HandleEvents indicates an expected call of HandleEvents.
-func (mr *MockEventHandlerMockRecorder) HandleEvents(arg0 any) *gomock.Call {
+func (mr *MockEventHandlerMockRecorder) HandleEvents(checkpoint any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HandleEvents", reflect.TypeOf((*MockEventHandler)(nil).HandleEvents), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HandleEvents", reflect.TypeOf((*MockEventHandler)(nil).HandleEvents), checkpoint)
 }
 
 // MockBeaconProvider is a mock of BeaconProvider interface.

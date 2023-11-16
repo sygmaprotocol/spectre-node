@@ -68,8 +68,8 @@ func (h *RotateHandler) HandleEvents(checkpoint *apiv1.Finality) error {
 		h.msgChan <- []*message.Message{
 			evmMessage.NewEvmRotateMessage(h.domainID, domain, evmMessage.RotateData{
 				RotateInput: evmMessage.RotateInput{},
-				RotateProof: rotateProof,
-				StepProof:   stepProof,
+				RotateProof: rotateProof.Proof,
+				StepProof:   stepProof.Proof,
 				StepInput:   evmMessage.SyncStepInput{},
 			}),
 		}

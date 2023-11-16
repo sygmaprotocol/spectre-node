@@ -9,6 +9,9 @@ import (
 	"math/big"
 	"strings"
 
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/spec"
 	ethereumABI "github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -16,6 +19,7 @@ import (
 	"github.com/sygmaprotocol/spectre-node/chains/evm/abi"
 	"github.com/sygmaprotocol/spectre-node/chains/evm/listener/events"
 	evmMessage "github.com/sygmaprotocol/spectre-node/chains/evm/message"
+	"github.com/sygmaprotocol/spectre-node/chains/evm/prover"
 	"github.com/sygmaprotocol/sygma-core/relayer/message"
 )
 
@@ -24,17 +28,23 @@ type EventFetcher interface {
 }
 
 type Prover interface {
-	StepProof(blocknumber *big.Int) ([32]byte, error)
-	RotateProof(blocknumber *big.Int) ([32]byte, error)
+	StepProof() (*prover.EvmProof, error)
+	RotateProof(slot uint64) (*prover.EvmProof, error)
+}
+
+type BlockFetcher interface {
+	SignedBeaconBlock(ctx context.Context, opts *api.SignedBeaconBlockOpts) (*api.Response[*spec.VersionedSignedBeaconBlock], error)
 }
 
 type DepositEventHandler struct {
 	msgChan chan []*message.Message
 
 	eventFetcher EventFetcher
+	blockFetcher BlockFetcher
 	prover       Prover
 
 	domainID      uint8
+	blockInterval uint64
 	routerABI     ethereumABI.ABI
 	routerAddress common.Address
 }
@@ -42,24 +52,33 @@ type DepositEventHandler struct {
 func NewDepositEventHandler(
 	msgChan chan []*message.Message,
 	eventFetcher EventFetcher,
+	blockFetcher BlockFetcher,
 	prover Prover,
 	routerAddress common.Address,
 	domainID uint8,
+	blockInterval uint64,
 ) *DepositEventHandler {
 	routerABI, _ := ethereumABI.JSON(strings.NewReader(abi.RouterABI))
 	return &DepositEventHandler{
 		eventFetcher:  eventFetcher,
+		blockFetcher:  blockFetcher,
 		prover:        prover,
 		routerAddress: routerAddress,
 		routerABI:     routerABI,
 		msgChan:       msgChan,
 		domainID:      domainID,
+		blockInterval: blockInterval,
 	}
 }
 
 // HandleEvents fetches deposit events and if deposits exists, submits a step message
 // to be executed on the destination network
-func (h *DepositEventHandler) HandleEvents(startBlock *big.Int, endBlock *big.Int) error {
+func (h *DepositEventHandler) HandleEvents(checkpoint *apiv1.Finality) error {
+	startBlock, endBlock, err := h.blockrange(checkpoint)
+	if err != nil {
+		return err
+	}
+
 	deposits, err := h.fetchDeposits(startBlock, endBlock)
 	if err != nil {
 		return fmt.Errorf("unable to fetch deposit events because of: %+v", err)
@@ -74,7 +93,7 @@ func (h *DepositEventHandler) HandleEvents(startBlock *big.Int, endBlock *big.In
 
 	log.Info().Uint8("domainID", h.domainID).Msgf("Found deposits between blocks %s-%s", startBlock, endBlock)
 
-	proof, err := h.prover.StepProof(endBlock)
+	proof, err := h.prover.StepProof()
 	if err != nil {
 		return err
 	}
@@ -85,12 +104,25 @@ func (h *DepositEventHandler) HandleEvents(startBlock *big.Int, endBlock *big.In
 				h.domainID,
 				deposits[0].DestinationDomainID,
 				evmMessage.StepData{
-					Proof: proof,
+					Proof: proof.Proof,
 				},
 			),
 		}
 	}
 	return nil
+}
+
+func (h *DepositEventHandler) blockrange(checkpoint *apiv1.Finality) (*big.Int, *big.Int, error) {
+	justifiedRoot, err := h.blockFetcher.SignedBeaconBlock(context.Background(), &api.SignedBeaconBlockOpts{
+		Block: checkpoint.Justified.Root.String(),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	endBlock := big.NewInt(int64(justifiedRoot.Data.Capella.Message.Body.ExecutionPayload.BlockNumber))
+	startBlock := new(big.Int).Sub(endBlock, big.NewInt(int64(h.blockInterval)))
+	return startBlock, endBlock, nil
 }
 
 func (h *DepositEventHandler) fetchDeposits(startBlock *big.Int, endBlock *big.Int) ([]*events.Deposit, error) {

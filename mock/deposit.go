@@ -13,8 +13,11 @@ import (
 	big "math/big"
 	reflect "reflect"
 
+	api "github.com/attestantio/go-eth2-client/api"
+	spec "github.com/attestantio/go-eth2-client/spec"
 	common "github.com/ethereum/go-ethereum/common"
 	types "github.com/ethereum/go-ethereum/core/types"
+	prover "github.com/sygmaprotocol/spectre-node/chains/evm/prover"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -80,10 +83,10 @@ func (m *MockProver) EXPECT() *MockProverMockRecorder {
 }
 
 // RotateProof mocks base method.
-func (m *MockProver) RotateProof(slot uint64) ([32]byte, error) {
+func (m *MockProver) RotateProof(slot uint64) (*prover.EvmProof, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RotateProof", slot)
-	ret0, _ := ret[0].([32]byte)
+	ret0, _ := ret[0].(*prover.EvmProof)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -95,10 +98,10 @@ func (mr *MockProverMockRecorder) RotateProof(slot any) *gomock.Call {
 }
 
 // StepProof mocks base method.
-func (m *MockProver) StepProof() ([32]byte, error) {
+func (m *MockProver) StepProof() (*prover.EvmProof, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "StepProof")
-	ret0, _ := ret[0].([32]byte)
+	ret0, _ := ret[0].(*prover.EvmProof)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -107,4 +110,42 @@ func (m *MockProver) StepProof() ([32]byte, error) {
 func (mr *MockProverMockRecorder) StepProof() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StepProof", reflect.TypeOf((*MockProver)(nil).StepProof))
+}
+
+// MockBlockFetcher is a mock of BlockFetcher interface.
+type MockBlockFetcher struct {
+	ctrl     *gomock.Controller
+	recorder *MockBlockFetcherMockRecorder
+}
+
+// MockBlockFetcherMockRecorder is the mock recorder for MockBlockFetcher.
+type MockBlockFetcherMockRecorder struct {
+	mock *MockBlockFetcher
+}
+
+// NewMockBlockFetcher creates a new mock instance.
+func NewMockBlockFetcher(ctrl *gomock.Controller) *MockBlockFetcher {
+	mock := &MockBlockFetcher{ctrl: ctrl}
+	mock.recorder = &MockBlockFetcherMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockBlockFetcher) EXPECT() *MockBlockFetcherMockRecorder {
+	return m.recorder
+}
+
+// SignedBeaconBlock mocks base method.
+func (m *MockBlockFetcher) SignedBeaconBlock(ctx context.Context, opts *api.SignedBeaconBlockOpts) (*api.Response[*spec.VersionedSignedBeaconBlock], error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SignedBeaconBlock", ctx, opts)
+	ret0, _ := ret[0].(*api.Response[*spec.VersionedSignedBeaconBlock])
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SignedBeaconBlock indicates an expected call of SignedBeaconBlock.
+func (mr *MockBlockFetcherMockRecorder) SignedBeaconBlock(ctx, opts any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignedBeaconBlock", reflect.TypeOf((*MockBlockFetcher)(nil).SignedBeaconBlock), ctx, opts)
 }
