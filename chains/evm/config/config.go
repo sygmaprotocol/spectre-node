@@ -12,15 +12,15 @@ import (
 
 type EVMConfig struct {
 	config.BaseNetworkConfig
-	BeaconEndpoint        string  `required:"true"`
+	BeaconEndpoint        string  `required:"true" split_words:"true"`
 	Router                string  `required:"true"`
 	Spectre               string  `required:"true"`
-	MaxGasPrice           int64   `default:"500000000000"`
-	BlockInterval         uint64  `default:"32"`
-	GasMultiplier         float64 `default:"1"`
-	GasIncreasePercentage int64   `default:"15"`
-	RetryInterval         uint64  `default:"12"`
-	CommitteePeriodLength uint64  `default:"256"`
+	MaxGasPrice           int64   `default:"500000000000" split_words:"true"`
+	BlockInterval         uint64  `default:"32" split_words:"true"`
+	GasMultiplier         float64 `default:"1" split_words:"true"`
+	GasIncreasePercentage int64   `default:"15" split_words:"true"`
+	RetryInterval         uint64  `default:"12" split_words:"true"`
+	CommitteePeriodLength uint64  `default:"256" split_words:"true"`
 }
 
 // LoadEVMConfig loads EVM config from the environment and validates the fields
