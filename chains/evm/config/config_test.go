@@ -25,7 +25,6 @@ func (c *EVMConfigTestSuite) TearDownTest() {
 }
 
 func (s *EVMConfigTestSuite) Test_LoadEVMConfig_MissingField() {
-	os.Setenv("SPECTRE_DOMAINS_1_ID", "1")
 	os.Setenv("SPECTRE_DOMAINS_1_ENDPOINT", "http://endpoint.com")
 	os.Setenv("SPECTRE_DOMAINS_1_KEY", "key")
 	os.Setenv("SPECTRE_DOMAINS_1_SPECTRE", "spectre")
@@ -37,7 +36,6 @@ func (s *EVMConfigTestSuite) Test_LoadEVMConfig_MissingField() {
 }
 
 func (s *EVMConfigTestSuite) Test_LoadEVMConfig_SuccessfulLoad_DefaultValues() {
-	os.Setenv("SPECTRE_DOMAINS_1_ID", "1")
 	os.Setenv("SPECTRE_DOMAINS_1_ENDPOINT", "http://endpoint.com")
 	os.Setenv("SPECTRE_DOMAINS_1_KEY", "key")
 	os.Setenv("SPECTRE_DOMAINS_1_SPECTRE", "spectre")
@@ -50,7 +48,6 @@ func (s *EVMConfigTestSuite) Test_LoadEVMConfig_SuccessfulLoad_DefaultValues() {
 	s.Nil(err)
 	s.Equal(c, &config.EVMConfig{
 		BaseNetworkConfig: baseConfig.BaseNetworkConfig{
-			ID:       1,
 			Key:      "key",
 			Endpoint: "http://endpoint.com",
 		},
@@ -67,7 +64,6 @@ func (s *EVMConfigTestSuite) Test_LoadEVMConfig_SuccessfulLoad_DefaultValues() {
 }
 
 func (s *EVMConfigTestSuite) Test_LoadEVMConfig_SuccessfulLoad() {
-	os.Setenv("SPECTRE_DOMAINS_1_ID", "1")
 	os.Setenv("SPECTRE_DOMAINS_1_ENDPOINT", "http://endpoint.com")
 	os.Setenv("SPECTRE_DOMAINS_1_KEY", "key")
 	os.Setenv("SPECTRE_DOMAINS_1_SPECTRE", "spectre")
@@ -86,7 +82,6 @@ func (s *EVMConfigTestSuite) Test_LoadEVMConfig_SuccessfulLoad() {
 	s.Nil(err)
 	s.Equal(c, &config.EVMConfig{
 		BaseNetworkConfig: baseConfig.BaseNetworkConfig{
-			ID:       1,
 			Key:      "key",
 			Endpoint: "http://endpoint.com",
 		},
