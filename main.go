@@ -89,6 +89,7 @@ func main() {
 				beaconClient, err := http.New(ctx,
 					http.WithAddress(config.BeaconEndpoint),
 					http.WithLogLevel(logLevel),
+					http.WithTimeout(time.Second*30),
 				)
 				if err != nil {
 					panic(err)
@@ -104,7 +105,7 @@ func main() {
 				routerAddress := common.HexToAddress(config.Router)
 				depositHandler := handlers.NewDepositEventHandler(msgChan, client, beaconProvider, p, routerAddress, id, config.BlockInterval)
 				rotateHandler := handlers.NewRotateHandler(msgChan, beaconProvider, p, id, domains)
-				listener := listener.NewEVMListener(beaconProvider, []listener.EventHandler{depositHandler, rotateHandler}, id, time.Duration(config.RetryInterval)*time.Second)
+				listener := listener.NewEVMListener(beaconProvider, []listener.EventHandler{rotateHandler, depositHandler}, id, time.Duration(config.RetryInterval)*time.Second)
 
 				messageHandler := message.NewMessageHandler()
 

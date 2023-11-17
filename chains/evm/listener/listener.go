@@ -78,17 +78,18 @@ loop:
 				continue
 			}
 
-			l.log.Debug().Msgf("Handling events for checkpoint %+v", finalityCheckpoint.Data)
+			l.log.Debug().Msgf("Handling events for checkpoint on epoch %d", finalityCheckpoint.Data.Finalized.Epoch)
 
 			for _, handler := range l.eventHandlers {
 				err := handler.HandleEvents(finalityCheckpoint.Data)
 				if err != nil {
 					l.log.Warn().Err(err).Msgf("Unable to handle events")
+					time.Sleep(l.retryInterval)
 					continue loop
 				}
 			}
 
-			l.log.Debug().Msgf("Handled events for checkpoint %+v", finalityCheckpoint.Data)
+			l.log.Debug().Msgf("Handled events for checkpoint on epoch %d", finalityCheckpoint.Data.Finalized.Epoch)
 
 			latestCheckpoint = finalityCheckpoint.Data.Finalized.Root.String()
 		}
