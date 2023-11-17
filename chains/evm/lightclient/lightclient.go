@@ -71,7 +71,7 @@ func (c *LightClient) FinalityUpdate() (*consensus.LightClientFinalityUpdateCape
 
 // Boostrap returns the latest light client bootstrap for the given block root
 func (c *LightClient) Bootstrap(blockRoot string) (*consensus.LightClientBootstrapCapella, error) {
-	resp, err := http.Get(fmt.Sprintf("%s/eth/v1/beacon/light_client/boostrap/%s", c.beaconURL, blockRoot))
+	resp, err := http.Get(fmt.Sprintf("%s/eth/v1/beacon/light_client/bootstrap/%s", c.beaconURL, blockRoot))
 	if err != nil {
 		return nil, err
 	}
