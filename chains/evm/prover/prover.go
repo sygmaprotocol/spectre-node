@@ -9,6 +9,7 @@ import (
 
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/sygmaprotocol/spectre-node/chains/evm/message"
 	consensus "github.com/umbracle/go-eth-consensus"
 )
 
@@ -24,9 +25,14 @@ type RotateArgs struct {
 	Update *consensus.LightClientUpdateCapella
 }
 
-type EvmProof struct {
+type ProverResponse struct {
 	Proof        [32]byte
 	PublicInputs [][]byte
+}
+
+type EvmProof[T any] struct {
+	Proof [32]byte
+	Input T
 }
 
 type LightClient interface {
@@ -70,34 +76,36 @@ func NewProver(
 }
 
 // StepProof generates the proof for the sync step
-func (p *Prover) StepProof() (*EvmProof, error) {
+func (p *Prover) StepProof() (*EvmProof[message.SyncStepInput], error) {
 	args, err := p.stepArgs()
 	if err != nil {
 		return nil, err
 	}
 
-	var proof *EvmProof
-	err = p.proverClient.Call("genEvmProofAndInstancesStepSyncCircuit", args, &proof)
+	var resp *ProverResponse
+	err = p.proverClient.Call("genEvmProofAndInstancesStepSyncCircuit", args, &resp)
 	if err != nil {
 		return nil, err
 	}
 
+	proof := &EvmProof[message.SyncStepInput]{}
 	return proof, nil
 }
 
 // RotateProof generates the proof for the sync committee rotation for the period
-func (p *Prover) RotateProof(epoch uint64) (*EvmProof, error) {
+func (p *Prover) RotateProof(epoch uint64) (*EvmProof[message.RotateInput], error) {
 	args, err := p.rotateArgs(epoch)
 	if err != nil {
 		return nil, err
 	}
 
-	var proof *EvmProof
-	err = p.proverClient.Call("genEvmProofAndInstancesRotationCircuit", args, &proof)
+	var resp *ProverResponse
+	err = p.proverClient.Call("genEvmProofAndInstancesRotationCircuit", args, &resp)
 	if err != nil {
 		return nil, err
 	}
 
+	proof := &EvmProof[message.RotateInput]{}
 	return proof, nil
 }
 
