@@ -29,10 +29,18 @@ func NewSpectreContract(
 	}
 }
 
-func (c *Spectre) Step(args message.SyncStepInput, poseidonCommitment [32]byte, opts transactor.TransactOptions) (*common.Hash, error) {
+func (c *Spectre) Step(stepInput message.SyncStepInput, stepProof [32]byte, opts transactor.TransactOptions) (*common.Hash, error) {
 	return c.ExecuteTransaction(
 		"step",
 		opts,
-		args, poseidonCommitment,
+		stepInput, stepProof,
+	)
+}
+
+func (c *Spectre) Rotate(rotateInput message.RotateInput, rotateProof [32]byte, stepInput message.SyncStepInput, stepProof [32]byte, opts transactor.TransactOptions) (*common.Hash, error) {
+	return c.ExecuteTransaction(
+		"rotate",
+		opts,
+		rotateInput, rotateProof, stepInput, stepProof,
 	)
 }

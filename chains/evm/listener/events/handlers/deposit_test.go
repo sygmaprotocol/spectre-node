@@ -43,17 +43,17 @@ type DepositHandlerTestSuite struct {
 
 	msgChan          chan []*message.Message
 	mockEventFetcher *mock.MockEventFetcher
-	mockStepProver   *mock.MockStepProver
+	mockStepProver   *mock.MockProver
 }
 
-func TestRunConfigTestSuite(t *testing.T) {
+func TestRunDepositTestSuite(t *testing.T) {
 	suite.Run(t, new(DepositHandlerTestSuite))
 }
 
 func (s *DepositHandlerTestSuite) SetupTest() {
 	ctrl := gomock.NewController(s.T())
 	s.mockEventFetcher = mock.NewMockEventFetcher(ctrl)
-	s.mockStepProver = mock.NewMockStepProver(ctrl)
+	s.mockStepProver = mock.NewMockProver(ctrl)
 	s.msgChan = make(chan []*message.Message, 1)
 	s.depositHandler = handlers.NewDepositEventHandler(
 		s.msgChan,

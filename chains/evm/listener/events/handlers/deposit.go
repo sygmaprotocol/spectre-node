@@ -23,15 +23,16 @@ type EventFetcher interface {
 	FetchEventLogs(ctx context.Context, contractAddress common.Address, event string, startBlock *big.Int, endBlock *big.Int) ([]types.Log, error)
 }
 
-type StepProver interface {
+type Prover interface {
 	StepProof(blocknumber *big.Int) ([32]byte, error)
+	RotateProof(blocknumber *big.Int) ([32]byte, error)
 }
 
 type DepositEventHandler struct {
 	msgChan chan []*message.Message
 
 	eventFetcher EventFetcher
-	stepProver   StepProver
+	prover       Prover
 
 	domainID      uint8
 	routerABI     ethereumABI.ABI
@@ -41,14 +42,14 @@ type DepositEventHandler struct {
 func NewDepositEventHandler(
 	msgChan chan []*message.Message,
 	eventFetcher EventFetcher,
-	stepProver StepProver,
+	prover Prover,
 	routerAddress common.Address,
 	domainID uint8,
 ) *DepositEventHandler {
 	routerABI, _ := ethereumABI.JSON(strings.NewReader(abi.RouterABI))
 	return &DepositEventHandler{
 		eventFetcher:  eventFetcher,
-		stepProver:    stepProver,
+		prover:        prover,
 		routerAddress: routerAddress,
 		routerABI:     routerABI,
 		msgChan:       msgChan,
@@ -71,11 +72,14 @@ func (h *DepositEventHandler) HandleEvents(startBlock *big.Int, endBlock *big.In
 		return nil
 	}
 
-	proof, err := h.stepProver.StepProof(endBlock)
+	log.Info().Uint8("domainID", h.domainID).Msgf("Found deposits between blocks %s-%s", startBlock, endBlock)
+
+	proof, err := h.prover.StepProof(endBlock)
 	if err != nil {
 		return err
 	}
 	for _, deposits := range domainDeposits {
+		log.Debug().Uint8("domainID", h.domainID).Msgf("Sending step message to domain %d", deposits[0].DestinationDomainID)
 		h.msgChan <- []*message.Message{
 			evmMessage.NewEvmStepMessage(
 				h.domainID,
