@@ -83,7 +83,7 @@ func (p *Prover) StepProof() (*EvmProof[message.SyncStepInput], error) {
 		return nil, err
 	}
 
-	var resp *ProverResponse
+	var resp ProverResponse
 	err = p.proverClient.Call("genEvmProofAndInstancesStepSyncCircuit", args, &resp)
 	if err != nil {
 		return nil, err
@@ -121,7 +121,7 @@ func (p *Prover) RotateProof(epoch uint64) (*EvmProof[message.RotateInput], erro
 		return nil, err
 	}
 
-	var resp *ProverResponse
+	var resp ProverResponse
 	err = p.proverClient.Call("genEvmProofAndInstancesRotationCircuit", args, &resp)
 	if err != nil {
 		return nil, err
@@ -195,6 +195,6 @@ func (p *Prover) committeeKeysRoot(pubkeys [512][48]byte) ([32]byte, error) {
 	}
 
 	hh := ssz.NewHasher()
-	hh.Append(keysSSZ)
+	hh.PutBytes(keysSSZ)
 	return hh.HashRoot()
 }
