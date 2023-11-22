@@ -9,6 +9,7 @@ import (
 
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	ssz "github.com/ferranbt/fastssz"
 	"github.com/sygmaprotocol/spectre-node/chains/evm/message"
 	consensus "github.com/umbracle/go-eth-consensus"
 )
@@ -88,7 +89,28 @@ func (p *Prover) StepProof() (*EvmProof[message.SyncStepInput], error) {
 		return nil, err
 	}
 
-	proof := &EvmProof[message.SyncStepInput]{}
+	finalizedHeaderRoot, err := args.Update.FinalizedHeader.HashTreeRoot()
+	if err != nil {
+		return nil, err
+	}
+	executionRoot, err := args.Update.FinalizedHeader.Execution.HashTreeRoot()
+	if err != nil {
+		return nil, err
+	}
+	participation := uint64(0)
+	for _, byte := range args.Update.SyncAggregate.SyncCommiteeBits {
+		participation += uint64(byte)
+	}
+	proof := &EvmProof[message.SyncStepInput]{
+		Proof: resp.Proof,
+		Input: message.SyncStepInput{
+			AttestedSlot:         args.Update.AttestedHeader.Header.Slot,
+			FinalizedSlot:        args.Update.FinalizedHeader.Header.Slot,
+			Participation:        participation,
+			FinalizedHeaderRoot:  finalizedHeaderRoot,
+			ExecutionPayloadRoot: executionRoot,
+		},
+	}
 	return proof, nil
 }
 
@@ -105,7 +127,18 @@ func (p *Prover) RotateProof(epoch uint64) (*EvmProof[message.RotateInput], erro
 		return nil, err
 	}
 
-	proof := &EvmProof[message.RotateInput]{}
+	syncCommiteeRoot, err := p.committeeKeysRoot(args.Update.NextSyncCommittee.PubKeys)
+	if err != nil {
+		return nil, err
+	}
+
+	proof := &EvmProof[message.RotateInput]{
+		Proof: resp.Proof,
+		Input: message.RotateInput{
+			SyncCommitteeSSZ:      syncCommiteeRoot,
+			SyncCommitteePoseidon: [32]byte{},
+		},
+	}
 	return proof, nil
 }
 
@@ -153,4 +186,15 @@ func (p *Prover) rotateArgs(epoch uint64) (*RotateArgs, error) {
 		Update: update,
 		Spec:   p.spec,
 	}, nil
+}
+
+func (p *Prover) committeeKeysRoot(pubkeys [512][48]byte) ([32]byte, error) {
+	keysSSZ := make([]byte, 0)
+	for i := 0; i < 512; i++ {
+		keysSSZ = append(keysSSZ, pubkeys[i][:]...)
+	}
+
+	hh := ssz.NewHasher()
+	hh.Append(keysSSZ)
+	return hh.HashRoot()
 }

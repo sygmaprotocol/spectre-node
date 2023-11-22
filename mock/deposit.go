@@ -17,6 +17,7 @@ import (
 	spec "github.com/attestantio/go-eth2-client/spec"
 	common "github.com/ethereum/go-ethereum/common"
 	types "github.com/ethereum/go-ethereum/core/types"
+	message "github.com/sygmaprotocol/spectre-node/chains/evm/message"
 	prover "github.com/sygmaprotocol/spectre-node/chains/evm/prover"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -83,25 +84,25 @@ func (m *MockProver) EXPECT() *MockProverMockRecorder {
 }
 
 // RotateProof mocks base method.
-func (m *MockProver) RotateProof(slot uint64) (*prover.EvmProof, error) {
+func (m *MockProver) RotateProof(epoch uint64) (*prover.EvmProof[message.RotateInput], error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RotateProof", slot)
-	ret0, _ := ret[0].(*prover.EvmProof)
+	ret := m.ctrl.Call(m, "RotateProof", epoch)
+	ret0, _ := ret[0].(*prover.EvmProof[message.RotateInput])
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // RotateProof indicates an expected call of RotateProof.
-func (mr *MockProverMockRecorder) RotateProof(slot any) *gomock.Call {
+func (mr *MockProverMockRecorder) RotateProof(epoch any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RotateProof", reflect.TypeOf((*MockProver)(nil).RotateProof), slot)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RotateProof", reflect.TypeOf((*MockProver)(nil).RotateProof), epoch)
 }
 
 // StepProof mocks base method.
-func (m *MockProver) StepProof() (*prover.EvmProof, error) {
+func (m *MockProver) StepProof() (*prover.EvmProof[message.SyncStepInput], error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "StepProof")
-	ret0, _ := ret[0].(*prover.EvmProof)
+	ret0, _ := ret[0].(*prover.EvmProof[message.SyncStepInput])
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
