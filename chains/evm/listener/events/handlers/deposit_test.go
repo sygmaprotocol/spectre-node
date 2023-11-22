@@ -241,7 +241,7 @@ func (s *DepositHandlerTestSuite) Test_HandleEvents_ValidDeposit() {
 			},
 		},
 	}, nil)
-	s.mockStepProver.EXPECT().StepProof().Return(&prover.EvmProof[evmMessage.StepData]{}, nil)
+	s.mockStepProver.EXPECT().StepProof().Return(&prover.EvmProof[evmMessage.SyncStepInput]{}, nil)
 	s.mockEventFetcher.EXPECT().FetchEventLogs(
 		context.Background(),
 		gomock.Any(),

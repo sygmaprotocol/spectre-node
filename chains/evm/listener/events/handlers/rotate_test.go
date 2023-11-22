@@ -100,7 +100,7 @@ func (s *RotateHandlerTestSuite) Test_HandleEvents_NewSyncCommittee_ProofFails()
 			Validators: []phase0.ValidatorIndex{128},
 		},
 	}, nil)
-	s.mockProver.EXPECT().StepProof().Return(&prover.EvmProof[evmMessage.StepData]{}, nil)
+	s.mockProver.EXPECT().StepProof().Return(&prover.EvmProof[evmMessage.SyncStepInput]{}, nil)
 	s.mockProver.EXPECT().RotateProof(uint64(100)).Return(nil, fmt.Errorf("error"))
 
 	err = s.handler.HandleEvents(&apiv1.Finality{
@@ -119,8 +119,8 @@ func (s *RotateHandlerTestSuite) Test_HandleEvents_NewSyncCommittee() {
 			Validators: []phase0.ValidatorIndex{128},
 		},
 	}, nil)
-	s.mockProver.EXPECT().StepProof().Return(&prover.EvmProof[evmMessage.StepData]{}, nil)
-	s.mockProver.EXPECT().RotateProof(uint64(100)).Return(&prover.EvmProof[evmMessage.RotateData]{}, nil)
+	s.mockProver.EXPECT().StepProof().Return(&prover.EvmProof[evmMessage.SyncStepInput]{}, nil)
+	s.mockProver.EXPECT().RotateProof(uint64(100)).Return(&prover.EvmProof[evmMessage.RotateInput]{}, nil)
 
 	err := s.handler.HandleEvents(&apiv1.Finality{
 		Finalized: &phase0.Checkpoint{
