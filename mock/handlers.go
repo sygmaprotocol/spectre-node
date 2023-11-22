@@ -80,10 +80,10 @@ func (m *MockStepProver) EXPECT() *MockStepProverMockRecorder {
 }
 
 // StepProof mocks base method.
-func (m *MockStepProver) StepProof(blocknumber *big.Int) (any, error) {
+func (m *MockStepProver) StepProof(blocknumber *big.Int) ([32]byte, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "StepProof", blocknumber)
-	ret0, _ := ret[0].(any)
+	ret0, _ := ret[0].([32]byte)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

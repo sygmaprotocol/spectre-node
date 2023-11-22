@@ -24,7 +24,7 @@ type EventFetcher interface {
 }
 
 type StepProver interface {
-	StepProof(blocknumber *big.Int) (interface{}, error)
+	StepProof(blocknumber *big.Int) ([32]byte, error)
 }
 
 type DepositEventHandler struct {
@@ -80,7 +80,9 @@ func (h *DepositEventHandler) HandleEvents(startBlock *big.Int, endBlock *big.In
 			evmMessage.NewEvmStepMessage(
 				h.domainID,
 				deposits[0].DestinationDomainID,
-				proof,
+				evmMessage.StepData{
+					Proof: proof,
+				},
 			),
 		}
 	}
@@ -110,8 +112,6 @@ func (h *DepositEventHandler) fetchDeposits(startBlock *big.Int, endBlock *big.I
 }
 
 func (h *DepositEventHandler) unpackDeposit(data []byte) (*events.Deposit, error) {
-	fmt.Println(data)
-
 	var d events.Deposit
 	err := h.routerABI.UnpackIntoInterface(&d, "Deposit", data)
 	if err != nil {

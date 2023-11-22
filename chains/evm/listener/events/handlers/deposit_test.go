@@ -105,7 +105,7 @@ func (s *DepositHandlerTestSuite) Test_HandleEvents_ValidDeposit_ProverFails() {
 
 	startBlock := big.NewInt(0)
 	endBlock := big.NewInt(4)
-	s.mockStepProver.EXPECT().StepProof(endBlock).Return(nil, fmt.Errorf("error"))
+	s.mockStepProver.EXPECT().StepProof(endBlock).Return([32]byte{}, fmt.Errorf("error"))
 	s.mockEventFetcher.EXPECT().FetchEventLogs(
 		context.Background(),
 		gomock.Any(),
@@ -138,7 +138,7 @@ func (s *DepositHandlerTestSuite) Test_HandleEvents_ValidDeposit() {
 
 	startBlock := big.NewInt(0)
 	endBlock := big.NewInt(4)
-	s.mockStepProver.EXPECT().StepProof(endBlock).Return("step data", nil)
+	s.mockStepProver.EXPECT().StepProof(endBlock).Return(SliceTo32Bytes([]byte("step data")), nil)
 	s.mockEventFetcher.EXPECT().FetchEventLogs(
 		context.Background(),
 		gomock.Any(),
@@ -166,6 +166,8 @@ func (s *DepositHandlerTestSuite) Test_HandleEvents_ValidDeposit() {
 	s.Equal(msgs[0], evmMessage.NewEvmStepMessage(
 		1,
 		2,
-		"step data",
+		evmMessage.StepData{
+			Proof: SliceTo32Bytes([]byte("step data")),
+		},
 	))
 }
