@@ -140,5 +140,4 @@ func main() {
 
 	se := <-sysErr
 	log.Info().Msgf("terminating got ` [%v] signal", se)
-	return
 }
