@@ -12,10 +12,6 @@ import (
 	encoding "github.com/umbracle/go-eth-consensus/http"
 )
 
-type response struct {
-	Data *consensus.LightClientFinalityUpdateCapella `json:"data,omitempty"`
-}
-
 type LightClient struct {
 	beaconURL string
 }

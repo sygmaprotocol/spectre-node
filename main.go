@@ -138,9 +138,7 @@ func main() {
 		syscall.SIGQUIT)
 	log.Info().Msgf("Started spectre node")
 
-	select {
-	case se := <-sysErr:
-		log.Info().Msgf("terminating got ` [%v] signal", se)
-		return
-	}
+	se := <-sysErr
+	log.Info().Msgf("terminating got ` [%v] signal", se)
+	return
 }
