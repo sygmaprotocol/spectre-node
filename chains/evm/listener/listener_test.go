@@ -112,6 +112,6 @@ func (s *ListenerTestSuite) Test_ListenToEvents_ValidCheckpoint() {
 	ctx, cancel := context.WithCancel(context.Background())
 	go s.listener.ListenToEvents(ctx, big.NewInt(0))
 
-	time.Sleep(time.Millisecond * 25)
+	time.Sleep(time.Millisecond * 50)
 	cancel()
 }
