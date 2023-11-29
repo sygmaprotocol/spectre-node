@@ -58,7 +58,7 @@ func (h *RotateHandler) HandleEvents(checkpoint *apiv1.Finality) error {
 	if err != nil {
 		return err
 	}
-	rotateProof, err := h.prover.RotateProof(uint64(checkpoint.Finalized.Epoch))
+	rotateProof, err := h.prover.RotateProof(uint64(checkpoint.Justified.Epoch))
 	if err != nil {
 		return err
 	}

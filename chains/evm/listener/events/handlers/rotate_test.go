@@ -104,7 +104,7 @@ func (s *RotateHandlerTestSuite) Test_HandleEvents_NewSyncCommittee_ProofFails()
 	s.mockProver.EXPECT().RotateProof(uint64(100)).Return(nil, fmt.Errorf("error"))
 
 	err = s.handler.HandleEvents(&apiv1.Finality{
-		Finalized: &phase0.Checkpoint{
+		Justified: &phase0.Checkpoint{
 			Epoch: 100,
 		},
 	})
@@ -123,7 +123,7 @@ func (s *RotateHandlerTestSuite) Test_HandleEvents_NewSyncCommittee() {
 	s.mockProver.EXPECT().RotateProof(uint64(100)).Return(&prover.EvmProof[evmMessage.RotateInput]{}, nil)
 
 	err := s.handler.HandleEvents(&apiv1.Finality{
-		Finalized: &phase0.Checkpoint{
+		Justified: &phase0.Checkpoint{
 			Epoch: 100,
 		},
 	})
