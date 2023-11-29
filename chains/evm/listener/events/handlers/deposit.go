@@ -5,7 +5,6 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 	"math/big"
 	"strings"
 
@@ -17,7 +16,6 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/rs/zerolog/log"
 	"github.com/sygmaprotocol/spectre-node/chains/evm/abi"
-	"github.com/sygmaprotocol/spectre-node/chains/evm/listener/events"
 	evmMessage "github.com/sygmaprotocol/spectre-node/chains/evm/message"
 	"github.com/sygmaprotocol/spectre-node/chains/evm/prover"
 	"github.com/sygmaprotocol/sygma-core/relayer/message"
@@ -44,6 +42,7 @@ type DepositEventHandler struct {
 	prover       Prover
 
 	domainID      uint8
+	domains       []uint8
 	blockInterval uint64
 	routerABI     ethereumABI.ABI
 	routerAddress common.Address
@@ -56,6 +55,7 @@ func NewDepositEventHandler(
 	prover Prover,
 	routerAddress common.Address,
 	domainID uint8,
+	domains []uint8,
 	blockInterval uint64,
 ) *DepositEventHandler {
 	routerABI, _ := ethereumABI.JSON(strings.NewReader(abi.RouterABI))
@@ -63,6 +63,7 @@ func NewDepositEventHandler(
 		eventFetcher:  eventFetcher,
 		blockFetcher:  blockFetcher,
 		prover:        prover,
+		domains:       domains,
 		routerAddress: routerAddress,
 		routerABI:     routerABI,
 		msgChan:       msgChan,
@@ -74,35 +75,38 @@ func NewDepositEventHandler(
 // HandleEvents fetches deposit events and if deposits exists, submits a step message
 // to be executed on the destination network
 func (h *DepositEventHandler) HandleEvents(checkpoint *apiv1.Finality) error {
-	startBlock, endBlock, err := h.blockrange(checkpoint)
-	if err != nil {
-		return err
-	}
+	/*
+			startBlock, endBlock, err := h.blockrange(checkpoint)
+			if err != nil {
+				return err
+			}
 
-	deposits, err := h.fetchDeposits(startBlock, endBlock)
-	if err != nil {
-		return fmt.Errorf("unable to fetch deposit events because of: %+v", err)
-	}
-	domainDeposits := make(map[uint8][]*events.Deposit)
-	for _, d := range deposits {
-		domainDeposits[d.DestinationDomainID] = append(domainDeposits[d.DestinationDomainID], d)
-	}
-	if len(domainDeposits) == 0 {
-		return nil
-	}
+			deposits, err := h.fetchDeposits(startBlock, endBlock)
+			if err != nil {
+				return fmt.Errorf("unable to fetch deposit events because of: %+v", err)
+			}
+			domainDeposits := make(map[uint8][]*events.Deposit)
+			for _, d := range deposits {
+				domainDeposits[d.DestinationDomainID] = append(domainDeposits[d.DestinationDomainID], d)
+			}
+			if len(domainDeposits) == 0 {
+				return nil
+			}
 
-	log.Info().Uint8("domainID", h.domainID).Msgf("Found deposits between blocks %s-%s", startBlock, endBlock)
+		log.Info().Uint8("domainID", h.domainID).Msgf("Found deposits between blocks %s-%s", startBlock, endBlock)
+
+	*/
 
 	proof, err := h.prover.StepProof()
 	if err != nil {
 		return err
 	}
-	for _, deposits := range domainDeposits {
+	for _, destDomain := range h.domains {
 		log.Debug().Uint8("domainID", h.domainID).Msgf("Sending step message to domain %d", deposits[0].DestinationDomainID)
 		h.msgChan <- []*message.Message{
 			evmMessage.NewEvmStepMessage(
 				h.domainID,
-				deposits[0].DestinationDomainID,
+				destDomain,
 				evmMessage.StepData{
 					Proof: proof.Proof,
 					Args:  proof.Input,
@@ -113,6 +117,7 @@ func (h *DepositEventHandler) HandleEvents(checkpoint *apiv1.Finality) error {
 	return nil
 }
 
+/*
 func (h *DepositEventHandler) blockrange(checkpoint *apiv1.Finality) (*big.Int, *big.Int, error) {
 	justifiedRoot, err := h.blockFetcher.SignedBeaconBlock(context.Background(), &api.SignedBeaconBlockOpts{
 		Block: checkpoint.Justified.Root.String(),
@@ -157,3 +162,4 @@ func (h *DepositEventHandler) unpackDeposit(data []byte) (*events.Deposit, error
 
 	return &d, nil
 }
+*/
