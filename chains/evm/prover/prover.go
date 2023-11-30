@@ -56,7 +56,7 @@ type BeaconClient interface {
 }
 
 type ProverClient interface {
-	Call(serviceMethod string, args any, reply any) error
+	CallFor(ctx context.Context, reply interface{}, method string, args ...interface{}) error
 }
 
 type Prover struct {
@@ -92,7 +92,7 @@ func (p *Prover) StepProof() (*EvmProof[message.SyncStepInput], error) {
 	}
 
 	var resp ProverResponse
-	err = p.proverClient.Call("genEvmProofAndInstancesStepSyncCircuit", args, &resp)
+	err = p.proverClient.CallFor(context.Background(), &resp, "genEvmProofAndInstancesStepSyncCircuit", args)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +130,7 @@ func (p *Prover) RotateProof(epoch uint64) (*EvmProof[message.RotateInput], erro
 	}
 
 	var resp ProverResponse
-	err = p.proverClient.Call("genEvmProofAndInstancesRotationCircuit", args, &resp)
+	err = p.proverClient.CallFor(context.Background(), &resp, "genEvmProofAndInstancesRotationCircuit", args)
 	if err != nil {
 		return nil, err
 	}
@@ -141,7 +141,7 @@ func (p *Prover) RotateProof(epoch uint64) (*EvmProof[message.RotateInput], erro
 	}
 
 	var commitmentResp CommitmentResponse
-	err = p.proverClient.Call("syncCommitteePoseidonCompressed", CommitmentArgs{Pubkeys: args.Update.NextSyncCommittee.PubKeys}, &commitmentResp)
+	err = p.proverClient.CallFor(context.Background(), &resp, "syncCommitteePoseidonCompressed", CommitmentArgs{Pubkeys: args.Update.NextSyncCommittee.PubKeys})
 	if err != nil {
 		return nil, err
 	}

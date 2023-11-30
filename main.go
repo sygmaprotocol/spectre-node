@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"math/big"
-	"net/rpc/jsonrpc"
 	"os"
 	"os/signal"
 	"syscall"
@@ -35,6 +34,7 @@ import (
 	"github.com/sygmaprotocol/sygma-core/observability"
 	"github.com/sygmaprotocol/sygma-core/relayer"
 	"github.com/sygmaprotocol/sygma-core/relayer/message"
+	"github.com/ybbus/jsonrpc/v3"
 )
 
 func main() {
@@ -55,6 +55,8 @@ func main() {
 	for domain := range cfg.Domains {
 		domains = append(domains, domain)
 	}
+
+	proverClient := jsonrpc.NewClient(cfg.Prover.URL)
 
 	msgChan := make(chan []*message.Message)
 	chains := make(map[uint8]relayer.RelayedChain)
@@ -96,10 +98,6 @@ func main() {
 				}
 				beaconProvider := beaconClient.(*http.Service)
 
-				proverClient, err := jsonrpc.Dial("tcp", cfg.Prover.URL)
-				if err != nil {
-					panic(err)
-				}
 				lightClient := lightclient.NewLightClient(config.BeaconEndpoint)
 				p := prover.NewProver(proverClient, beaconProvider, lightClient, prover.Spec(config.Spec), config.CommitteePeriodLength)
 				routerAddress := common.HexToAddress(config.Router)
