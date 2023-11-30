@@ -129,19 +129,19 @@ func (p *Prover) RotateProof(epoch uint64) (*EvmProof[message.RotateInput], erro
 		return nil, err
 	}
 
-	var resp ProverResponse
-	err = p.proverClient.CallFor(context.Background(), &resp, "genEvmProofAndInstancesRotationCircuit", args)
-	if err != nil {
-		return nil, err
-	}
-
 	syncCommiteeRoot, err := p.committeeKeysRoot(args.Update.NextSyncCommittee.PubKeys)
 	if err != nil {
 		return nil, err
 	}
 
 	var commitmentResp CommitmentResponse
-	err = p.proverClient.CallFor(context.Background(), &resp, "syncCommitteePoseidonCompressed", CommitmentArgs{Pubkeys: args.Update.NextSyncCommittee.PubKeys})
+	err = p.proverClient.CallFor(context.Background(), &commitmentResp, "syncCommitteePoseidonCompressed", CommitmentArgs{Pubkeys: args.Update.NextSyncCommittee.PubKeys})
+	if err != nil {
+		return nil, err
+	}
+
+	var resp ProverResponse
+	err = p.proverClient.CallFor(context.Background(), &resp, "genEvmProofAndInstancesRotationCircuitWithWitness", rArgs)
 	if err != nil {
 		return nil, err
 	}

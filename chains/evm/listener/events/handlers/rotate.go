@@ -54,11 +54,11 @@ func (h *RotateHandler) HandleEvents(checkpoint *apiv1.Finality) error {
 
 	log.Info().Uint8("domainID", h.domainID).Msgf("Rotating committee")
 
-	stepProof, err := h.prover.StepProof()
+	rotateProof, err := h.prover.RotateProof(uint64(checkpoint.Justified.Epoch))
 	if err != nil {
 		return err
 	}
-	rotateProof, err := h.prover.RotateProof(uint64(checkpoint.Justified.Epoch))
+	stepProof, err := h.prover.StepProof()
 	if err != nil {
 		return err
 	}
