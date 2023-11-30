@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 	"math/big"
-	"net/rpc"
+	"net/rpc/jsonrpc"
 	"os"
 	"os/signal"
 	"syscall"
@@ -96,7 +96,7 @@ func main() {
 				}
 				beaconProvider := beaconClient.(*http.Service)
 
-				proverClient, err := rpc.DialHTTP("tcp", cfg.Prover.URL)
+				proverClient, err := jsonrpc.Dial("tcp", cfg.Prover.URL)
 				if err != nil {
 					panic(err)
 				}
