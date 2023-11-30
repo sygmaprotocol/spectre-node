@@ -15,20 +15,20 @@ import (
 )
 
 type StepArgs struct {
-	Spec    Spec
-	Pubkeys [512][48]byte
-	Domain  phase0.Domain
-	Update  *consensus.LightClientFinalityUpdateCapella
+	Spec    Spec                                        `json:"spec"`
+	Pubkeys [512][48]byte                               `json:"pubkeys"`
+	Domain  phase0.Domain                               `json:"domain"`
+	Update  *consensus.LightClientFinalityUpdateCapella `json:"light_client_finality_update"`
 }
 
 type RotateArgs struct {
-	Spec   Spec
-	Update *consensus.LightClientUpdateCapella
+	Spec   Spec                                `json:"spec"`
+	Update *consensus.LightClientUpdateCapella `json:"light_client_update"`
 }
 
 type ProverResponse struct {
-	Proof        [32]byte
-	PublicInputs [][]byte
+	Proof        [32]byte `json:"proof"`
+	PublicInputs [][]byte `json:"public_inputs"`
 }
 
 type CommitmentResponse struct {
