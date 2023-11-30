@@ -31,6 +31,14 @@ type ProverResponse struct {
 	PublicInputs [][]byte
 }
 
+type CommitmentResponse struct {
+	Commitment [32]byte `json:"commitment"`
+}
+
+type CommitmentArgs struct {
+	Pubkeys [512][48]byte `json:"pubkeys"`
+}
+
 type EvmProof[T any] struct {
 	Proof [32]byte
 	Input T
@@ -132,11 +140,17 @@ func (p *Prover) RotateProof(epoch uint64) (*EvmProof[message.RotateInput], erro
 		return nil, err
 	}
 
+	var commitmentResp CommitmentResponse
+	err = p.proverClient.Call("syncCommitteePoseidonCompressed", CommitmentArgs{Pubkeys: args.Update.NextSyncCommittee.PubKeys}, &commitmentResp)
+	if err != nil {
+		return nil, err
+	}
+
 	proof := &EvmProof[message.RotateInput]{
 		Proof: resp.Proof,
 		Input: message.RotateInput{
 			SyncCommitteeSSZ:      syncCommiteeRoot,
-			SyncCommitteePoseidon: [32]byte{},
+			SyncCommitteePoseidon: commitmentResp.Commitment,
 		},
 	}
 	return proof, nil
