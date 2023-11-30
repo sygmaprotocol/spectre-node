@@ -43,7 +43,7 @@ func NewRotateHandler(msgChan chan []*message.Message, syncCommitteeFetcher Sync
 // if there is
 func (h *RotateHandler) HandleEvents(checkpoint *apiv1.Finality) error {
 	syncCommittee, err := h.syncCommitteeFetcher.SyncCommittee(context.Background(), &api.SyncCommitteeOpts{
-		State: "head",
+		State: "justified",
 	})
 	if err != nil {
 		return err
