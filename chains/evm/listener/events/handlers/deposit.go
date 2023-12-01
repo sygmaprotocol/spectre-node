@@ -96,6 +96,7 @@ func (h *DepositEventHandler) HandleEvents(checkpoint *apiv1.Finality) error {
 		log.Info().Uint8("domainID", h.domainID).Msgf("Found deposits between blocks %s-%s", startBlock, endBlock)
 
 	*/
+	log.Info().Uint8("domainID", h.domainID).Msgf("Generating step proof")
 
 	proof, err := h.prover.StepProof()
 	if err != nil {

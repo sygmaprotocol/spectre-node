@@ -10,6 +10,7 @@ import (
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	ssz "github.com/ferranbt/fastssz"
+	"github.com/rs/zerolog/log"
 	"github.com/sygmaprotocol/spectre-node/chains/evm/message"
 	consensus "github.com/umbracle/go-eth-consensus"
 )
@@ -27,8 +28,7 @@ type RotateArgs struct {
 }
 
 type ProverResponse struct {
-	Proof        [32]byte `json:"proof"`
-	PublicInputs [][]byte `json:"public_inputs"`
+	Proof [32]uint16 `json:"proof"`
 }
 
 type CommitmentResponse struct {
@@ -91,11 +91,30 @@ func (p *Prover) StepProof() (*EvmProof[message.SyncStepInput], error) {
 		return nil, err
 	}
 
+	updateSzz, _ := args.Update.MarshalSSZ()
+	pubkeysSZZ := make([]byte, 0)
+	for i := 0; i < 512; i++ {
+		pubkeysSZZ = append(pubkeysSZZ, args.Pubkeys[i][:]...)
+	}
+
+	type stepArgs struct {
+		Spec    Spec     `json:"spec"`
+		Pubkeys []uint16 `json:"pubkeys"`
+		Domain  []uint16 `json:"domain"`
+		Update  []uint16 `json:"light_client_finality_update"`
+	}
 	var resp ProverResponse
-	err = p.proverClient.CallFor(context.Background(), &resp, "genEvmProofAndInstancesStepSyncCircuit", args)
+	err = p.proverClient.CallFor(context.Background(), &resp, "genEvmProofAndInstancesStepSyncCircuit", stepArgs{
+		Spec:    args.Spec,
+		Pubkeys: ByteArrayToU16Array(pubkeysSZZ),
+		Update:  ByteArrayToU16Array(updateSzz),
+		Domain:  ByteArrayToU16Array(args.Domain[:]),
+	})
 	if err != nil {
 		return nil, err
 	}
+
+	log.Info().Msgf("Generated step proof %v", resp.Proof)
 
 	finalizedHeaderRoot, err := args.Update.FinalizedHeader.HashTreeRoot()
 	if err != nil {
@@ -110,7 +129,7 @@ func (p *Prover) StepProof() (*EvmProof[message.SyncStepInput], error) {
 		participation += uint64(byte)
 	}
 	proof := &EvmProof[message.SyncStepInput]{
-		Proof: resp.Proof,
+		Proof: [32]byte{},
 		Input: message.SyncStepInput{
 			AttestedSlot:         args.Update.AttestedHeader.Header.Slot,
 			FinalizedSlot:        args.Update.FinalizedHeader.Header.Slot,
@@ -140,28 +159,22 @@ func (p *Prover) RotateProof(epoch uint64) (*EvmProof[message.RotateInput], erro
 		return nil, err
 	}
 
+	updateSzz, _ := args.Update.MarshalSSZ()
+
 	type rotateArgs struct {
 		Update []uint16 `json:"light_client_update"`
 		Spec   Spec     `json:"spec"`
 	}
-	updateSzz, _ := args.Update.MarshalSSZ()
-
-	updateArray := make([]uint16, len(updateSzz))
-	for i, value := range updateSzz {
-		updateArray[i] = uint16(value)
-	}
-	rArgs := rotateArgs{
-		Update: updateArray,
-		Spec:   args.Spec,
-	}
 	var resp ProverResponse
-	err = p.proverClient.CallFor(context.Background(), &resp, "genEvmProofAndInstancesRotationCircuitWithWitness", rArgs)
+	err = p.proverClient.CallFor(context.Background(), &resp, "genEvmProofAndInstancesRotationCircuitWithWitness", rotateArgs{Update: ByteArrayToU16Array(updateSzz), Spec: args.Spec})
 	if err != nil {
 		return nil, err
 	}
 
+	log.Info().Msgf("Generated rotate proof %v", resp.Proof)
+
 	proof := &EvmProof[message.RotateInput]{
-		Proof: resp.Proof,
+		Proof: [32]byte{},
 		Input: message.RotateInput{
 			SyncCommitteeSSZ:      syncCommiteeRoot,
 			SyncCommitteePoseidon: commitmentResp.Commitment,
@@ -225,4 +238,12 @@ func (p *Prover) committeeKeysRoot(pubkeys [512][48]byte) ([32]byte, error) {
 	hh := ssz.NewHasher()
 	hh.PutBytes(keysSSZ)
 	return hh.HashRoot()
+}
+
+func ByteArrayToU16Array(src []byte) []uint16 {
+	dst := make([]uint16, len(src))
+	for i, value := range src {
+		dst[i] = uint16(value)
+	}
+	return dst
 }
