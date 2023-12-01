@@ -104,7 +104,7 @@ func (p *Prover) StepProof() (*EvmProof[message.SyncStepInput], error) {
 		Update  []uint16 `json:"light_client_finality_update"`
 	}
 	var resp ProverResponse
-	err = p.proverClient.CallFor(context.Background(), &resp, "genEvmProofAndInstancesStepSyncCircuit", stepArgs{
+	err = p.proverClient.CallFor(context.Background(), &resp, "genEvmProofAndInstancesStepSyncCircuitWithWitness", stepArgs{
 		Spec:    args.Spec,
 		Pubkeys: ByteArrayToU16Array(pubkeysSZZ),
 		Update:  ByteArrayToU16Array(updateSzz),
