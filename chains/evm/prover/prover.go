@@ -140,8 +140,22 @@ func (p *Prover) RotateProof(epoch uint64) (*EvmProof[message.RotateInput], erro
 		return nil, err
 	}
 
+	type rotateArgs struct {
+		Update []uint16 `json:"light_client_update"`
+		Spec   Spec     `json:"spec"`
+	}
+	updateSzz, _ := args.Update.MarshalSSZ()
+
+	updateArray := make([]uint16, len(updateSzz))
+	for i, value := range updateSzz {
+		updateArray[i] = uint16(value)
+	}
+	rArgs := rotateArgs{
+		Update: updateArray,
+		Spec:   args.Spec,
+	}
 	var resp ProverResponse
-	err = p.proverClient.CallFor(context.Background(), &resp, "genEvmProofAndInstancesRotationCircuitWithWitness", args)
+	err = p.proverClient.CallFor(context.Background(), &resp, "genEvmProofAndInstancesRotationCircuitWithWitness", rArgs)
 	if err != nil {
 		return nil, err
 	}
