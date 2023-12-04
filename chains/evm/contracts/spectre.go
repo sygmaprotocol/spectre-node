@@ -33,7 +33,7 @@ func (c *Spectre) Step(stepInput message.SyncStepInput, stepProof [32]byte, opts
 	return c.ExecuteTransaction(
 		"step",
 		opts,
-		stepInput, stepProof,
+		stepInput, stepProof[:],
 	)
 }
 
@@ -41,6 +41,6 @@ func (c *Spectre) Rotate(rotateInput message.RotateInput, rotateProof [32]byte, 
 	return c.ExecuteTransaction(
 		"rotate",
 		opts,
-		rotateInput, rotateProof, stepInput, stepProof,
+		rotateInput, rotateProof[:], stepInput, stepProof[:],
 	)
 }
