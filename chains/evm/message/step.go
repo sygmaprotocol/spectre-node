@@ -4,6 +4,7 @@
 package message
 
 import (
+	"github.com/rs/zerolog/log"
 	"github.com/sygmaprotocol/sygma-core/relayer/message"
 	"github.com/sygmaprotocol/sygma-core/relayer/proposal"
 )
@@ -38,6 +39,8 @@ func NewEvmStepMessage(source uint8, destination uint8, stepData StepData) *mess
 type EvmStepHandler struct{}
 
 func (h *EvmStepHandler) HandleMessage(m *message.Message) (*proposal.Proposal, error) {
+	log.Debug().Uint8("domainID", m.Destination).Msgf("Received step message from domain %d", m.Source)
+
 	return &proposal.Proposal{
 		Source:      m.Source,
 		Destination: m.Destination,

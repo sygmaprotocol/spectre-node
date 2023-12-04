@@ -4,6 +4,7 @@
 package message
 
 import (
+	"github.com/rs/zerolog/log"
 	"github.com/sygmaprotocol/sygma-core/relayer/message"
 	"github.com/sygmaprotocol/sygma-core/relayer/proposal"
 )
@@ -37,6 +38,8 @@ func NewEvmRotateMessage(source uint8, destination uint8, rotateData RotateData)
 type EvmRotateHandler struct{}
 
 func (h *EvmRotateHandler) HandleMessage(m *message.Message) (*proposal.Proposal, error) {
+	log.Debug().Uint8("domainID", m.Destination).Msgf("Received rotate message from domain %d", m.Source)
+
 	return &proposal.Proposal{
 		Source:      m.Source,
 		Destination: m.Destination,
