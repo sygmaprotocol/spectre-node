@@ -17,15 +17,15 @@ import (
 )
 
 type StepArgs struct {
-	Spec    Spec                                        `json:"spec"`
-	Pubkeys [512][48]byte                               `json:"pubkeys"`
-	Domain  phase0.Domain                               `json:"domain"`
-	Update  *consensus.LightClientFinalityUpdateCapella `json:"light_client_finality_update"`
+	Spec    Spec
+	Pubkeys [512][48]byte
+	Domain  phase0.Domain
+	Update  *consensus.LightClientFinalityUpdateCapella
 }
 
 type RotateArgs struct {
-	Spec   Spec                                `json:"spec"`
-	Update *consensus.LightClientUpdateCapella `json:"light_client_update"`
+	Spec   Spec
+	Update *consensus.LightClientUpdateCapella
 }
 
 type ProverResponse struct {
@@ -134,7 +134,7 @@ func (p *Prover) StepProof() (*EvmProof[message.SyncStepInput], error) {
 		Input: message.SyncStepInput{
 			AttestedSlot:         args.Update.AttestedHeader.Header.Slot,
 			FinalizedSlot:        args.Update.FinalizedHeader.Header.Slot,
-			Participation:        uint64(countSetBits(args.Update.SyncAggregate.SyncCommiteeBits)),
+			Participation:        uint64(CountSetBits(args.Update.SyncAggregate.SyncCommiteeBits)),
 			FinalizedHeaderRoot:  finalizedHeaderRoot,
 			ExecutionPayloadRoot: executionRoot,
 		},
@@ -242,42 +242,4 @@ func (p *Prover) committeeKeysRoot(pubkeys [512][48]byte) ([32]byte, error) {
 	hh := ssz.NewHasher()
 	hh.PutBytes(keysSSZ)
 	return hh.HashRoot()
-}
-
-func ByteArrayToU16Array(src []byte) []uint16 {
-	dst := make([]uint16, len(src))
-	for i, value := range src {
-		dst[i] = uint16(value)
-	}
-	return dst
-}
-
-func U16ArrayTo32ByteArray(src []uint16) [32]byte {
-	dst := [32]byte{}
-	for i, value := range src {
-		dst[i] = byte(value)
-	}
-	return dst
-}
-
-func U16ArrayToByteArray(src []uint16) []byte {
-	dst := make([]byte, len(src))
-	for i, value := range src {
-		dst[i] = byte(value)
-	}
-	return dst
-}
-func countSetBits(arr [64]byte) int {
-	count := 0
-
-	for _, b := range arr {
-		for i := 0; i < 8; i++ {
-			// Check if the i-th bit is set (1)
-			if b&(1<<i) != 0 {
-				count++
-			}
-		}
-	}
-
-	return count
 }
