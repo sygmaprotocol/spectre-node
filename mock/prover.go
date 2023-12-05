@@ -162,16 +162,21 @@ func (m *MockProverClient) EXPECT() *MockProverClientMockRecorder {
 	return m.recorder
 }
 
-// Call mocks base method.
-func (m *MockProverClient) Call(serviceMethod string, args, reply any) error {
+// CallFor mocks base method.
+func (m *MockProverClient) CallFor(ctx context.Context, reply any, method string, args ...any) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Call", serviceMethod, args, reply)
+	varargs := []any{ctx, reply, method}
+	for _, a := range args {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "CallFor", varargs...)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Call indicates an expected call of Call.
-func (mr *MockProverClientMockRecorder) Call(serviceMethod, args, reply any) *gomock.Call {
+// CallFor indicates an expected call of CallFor.
+func (mr *MockProverClientMockRecorder) CallFor(ctx, reply, method any, args ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Call", reflect.TypeOf((*MockProverClient)(nil).Call), serviceMethod, args, reply)
+	varargs := append([]any{ctx, reply, method}, args...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CallFor", reflect.TypeOf((*MockProverClient)(nil).CallFor), varargs...)
 }
