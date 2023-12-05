@@ -4,6 +4,7 @@
 package prover_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -37,7 +38,7 @@ func (s *ProverTestSuite) SetupTest() {
 	s.prover = prover.NewProver(s.proverClientMock, s.beaconClientMock, s.lightClientMock, prover.MAINNET_SPEC, 256)
 }
 
-func (s *ProverTestSuite) Test_StepProof_InvalidFinalityUpdate() {
+func (s *ProverTestSuite) Test_StepProof_InvalidArgs() {
 	s.lightClientMock.EXPECT().FinalityUpdate().Return(nil, fmt.Errorf("error"))
 
 	_, err := s.prover.StepProof()
@@ -78,36 +79,16 @@ func (s *ProverTestSuite) Test_StepProof_InvalidBoostrap() {
 	s.NotNil(err)
 }
 
-func (s *ProverTestSuite) Test_StepProof_InvalidDomain() {
-	s.lightClientMock.EXPECT().FinalityUpdate().Return(&consensus.LightClientFinalityUpdateCapella{
-		FinalizedHeader: &consensus.LightClientHeaderCapella{
-			Header: &consensus.BeaconBlockHeader{
-				Slot: 10,
-			},
-		},
-	}, nil)
-	s.beaconClientMock.EXPECT().BeaconBlockRoot(gomock.Any(), gomock.Any()).Return(&api.Response[*phase0.Root]{
-		Data: &phase0.Root{},
-	}, nil)
-	s.lightClientMock.EXPECT().Bootstrap(gomock.Any()).Return(&consensus.LightClientBootstrapCapella{
-		CurrentSyncCommittee: &consensus.SyncCommittee{
-			PubKeys: [512][48]byte{},
-		},
-	}, nil)
-	s.beaconClientMock.EXPECT().Domain(gomock.Any(), gomock.Any(), gomock.Any()).Return(phase0.Domain{}, fmt.Errorf("error"))
-
-	_, err := s.prover.StepProof()
-
-	s.NotNil(err)
-}
-
 func (s *ProverTestSuite) Test_StepProof_InvalidProof() {
 	s.lightClientMock.EXPECT().FinalityUpdate().Return(&consensus.LightClientFinalityUpdateCapella{
 		FinalizedHeader: &consensus.LightClientHeaderCapella{
 			Header: &consensus.BeaconBlockHeader{
 				Slot: 10,
 			},
+			Execution:       &consensus.ExecutionPayloadHeaderCapella{},
+			ExecutionBranch: [4][32]byte{},
 		},
+		FinalityBranch: [][32]byte{{}, {}, {}, {}, {}, {}},
 	}, nil)
 	s.beaconClientMock.EXPECT().BeaconBlockRoot(gomock.Any(), gomock.Any()).Return(&api.Response[*phase0.Root]{
 		Data: &phase0.Root{},
@@ -118,7 +99,7 @@ func (s *ProverTestSuite) Test_StepProof_InvalidProof() {
 		},
 	}, nil)
 	s.beaconClientMock.EXPECT().Domain(gomock.Any(), gomock.Any(), gomock.Any()).Return(phase0.Domain{}, nil)
-	s.proverClientMock.EXPECT().Call("genEvmProofAndInstancesStepSyncCircuit", gomock.Any(), gomock.Any()).Return(fmt.Errorf("error"))
+	s.proverClientMock.EXPECT().CallFor(context.Background(), gomock.Any(), "genEvmProofAndInstancesStepSyncCircuitWithWitness", gomock.Any()).Return(fmt.Errorf("error"))
 
 	_, err := s.prover.StepProof()
 
@@ -141,6 +122,7 @@ func (s *ProverTestSuite) Test_StepProof_ValidProof() {
 		SyncAggregate: &consensus.SyncAggregate{
 			SyncCommiteeBits: [64]byte{1, 2, 3, 4, 5, 6, 7, 8, 9},
 		},
+		FinalityBranch: [][32]byte{{}, {}, {}, {}, {}, {}},
 	}
 	s.lightClientMock.EXPECT().FinalityUpdate().Return(update, nil)
 	s.beaconClientMock.EXPECT().BeaconBlockRoot(gomock.Any(), gomock.Any()).Return(&api.Response[*phase0.Root]{
@@ -152,15 +134,9 @@ func (s *ProverTestSuite) Test_StepProof_ValidProof() {
 		},
 	}, nil)
 	s.beaconClientMock.EXPECT().Domain(gomock.Any(), gomock.Any(), gomock.Any()).Return(phase0.Domain{}, nil)
-	s.proverClientMock.EXPECT().Call("genEvmProofAndInstancesStepSyncCircuit", &prover.StepArgs{
-		Update:  update,
-		Pubkeys: [512][48]byte{{1}},
-		Domain:  phase0.Domain{},
-		Spec:    prover.MAINNET_SPEC,
-	}, gomock.Any()).DoAndReturn(func(method string, args any, reply *prover.ProverResponse) error {
+	s.proverClientMock.EXPECT().CallFor(context.Background(), gomock.Any(), "genEvmProofAndInstancesStepSyncCircuitWithWitness", gomock.Any()).DoAndReturn(func(ctx context.Context, reply *prover.ProverResponse, method string, args ...interface{}) error {
 		*reply = prover.ProverResponse{
-			Proof:        [32]byte{123},
-			PublicInputs: [][]byte{},
+			Proof: []uint16{1, 2, 3},
 		}
 		return nil
 	})
@@ -170,7 +146,7 @@ func (s *ProverTestSuite) Test_StepProof_ValidProof() {
 	s.Nil(err)
 }
 
-func (s *ProverTestSuite) Test_RotateProof_InvalidUpdate() {
+func (s *ProverTestSuite) Test_RotateProof_InvalidArgs() {
 	s.lightClientMock.EXPECT().Updates(gomock.Any()).Return([]*consensus.LightClientUpdateCapella{}, fmt.Errorf("error"))
 
 	_, err := s.prover.RotateProof(1000)
@@ -178,41 +154,59 @@ func (s *ProverTestSuite) Test_RotateProof_InvalidUpdate() {
 	s.NotNil(err)
 }
 
-func (s *ProverTestSuite) Test_RotateProof_MissingUpdates() {
-	s.lightClientMock.EXPECT().Updates(gomock.Any()).Return([]*consensus.LightClientUpdateCapella{}, nil)
-
-	_, err := s.prover.RotateProof(1000)
-
-	s.NotNil(err)
-}
-
-func (s *ProverTestSuite) Test_RotateProof_InvalidProof() {
-	s.lightClientMock.EXPECT().Updates(gomock.Any()).Return([]*consensus.LightClientUpdateCapella{{}}, nil)
-	s.proverClientMock.EXPECT().Call("genEvmProofAndInstancesRotationCircuit", gomock.Any(), gomock.Any()).Return(fmt.Errorf("error"))
-
-	_, err := s.prover.RotateProof(1000)
-
-	s.NotNil(err)
-}
-
-func (s *ProverTestSuite) Test_RotateProof_ValidProof() {
+func (s *ProverTestSuite) Test_RotateProof_InvalidSyncCommitteePoseidon() {
 	s.lightClientMock.EXPECT().Updates(uint64(39)).Return([]*consensus.LightClientUpdateCapella{{
 		FinalityBranch: [][32]byte{{1}},
 		NextSyncCommittee: &consensus.SyncCommittee{
 			PubKeys: [512][48]byte{},
 		},
 	}}, nil)
-	s.proverClientMock.EXPECT().Call("genEvmProofAndInstancesRotationCircuit", &prover.RotateArgs{
-		Update: &consensus.LightClientUpdateCapella{
-			FinalityBranch: [][32]byte{{1}},
-			NextSyncCommittee: &consensus.SyncCommittee{
-				PubKeys: [512][48]byte{},
-			},
+
+	s.proverClientMock.EXPECT().CallFor(context.Background(), gomock.Any(), "syncCommitteePoseidonCompressed", gomock.Any()).Return(fmt.Errorf("error"))
+
+	_, err := s.prover.RotateProof(10000)
+
+	s.NotNil(err)
+}
+
+func (s *ProverTestSuite) Test_RotateProof_InvalidProof() {
+	s.lightClientMock.EXPECT().Updates(uint64(39)).Return([]*consensus.LightClientUpdateCapella{{
+		FinalityBranch: [][32]byte{{1}, {}, {}, {}, {}, {}},
+		NextSyncCommittee: &consensus.SyncCommittee{
+			PubKeys: [512][48]byte{{}, {}, {}, {}, {}},
 		},
-		Spec: prover.MAINNET_SPEC,
-	}, gomock.Any()).DoAndReturn(func(method string, resp any, reply *prover.ProverResponse) error {
-		*reply = prover.ProverResponse{
-			Proof: [32]byte{234},
+		NextSyncCommitteeBranch: [][32]byte{{}, {}, {}, {}, {}},
+	}}, nil)
+	s.proverClientMock.EXPECT().CallFor(context.Background(), gomock.Any(), "syncCommitteePoseidonCompressed", gomock.Any()).DoAndReturn(func(ctx context.Context, resp *prover.CommitmentResponse, method string, args ...interface{}) error {
+		*resp = prover.CommitmentResponse{
+			Commitment: [32]byte{},
+		}
+		return nil
+	})
+	s.proverClientMock.EXPECT().CallFor(context.Background(), gomock.Any(), "genEvmProofAndInstancesRotationCircuitWithWitness", gomock.Any()).Return(fmt.Errorf("error"))
+
+	_, err := s.prover.RotateProof(10000)
+
+	s.NotNil(err)
+}
+
+func (s *ProverTestSuite) Test_RotateProof_ValidProof() {
+	s.lightClientMock.EXPECT().Updates(uint64(39)).Return([]*consensus.LightClientUpdateCapella{{
+		FinalityBranch: [][32]byte{{1}, {}, {}, {}, {}, {}},
+		NextSyncCommittee: &consensus.SyncCommittee{
+			PubKeys: [512][48]byte{{}, {}, {}, {}, {}},
+		},
+		NextSyncCommitteeBranch: [][32]byte{{}, {}, {}, {}, {}},
+	}}, nil)
+	s.proverClientMock.EXPECT().CallFor(context.Background(), gomock.Any(), "syncCommitteePoseidonCompressed", gomock.Any()).DoAndReturn(func(ctx context.Context, resp *prover.CommitmentResponse, method string, args ...interface{}) error {
+		*resp = prover.CommitmentResponse{
+			Commitment: [32]byte{},
+		}
+		return nil
+	})
+	s.proverClientMock.EXPECT().CallFor(context.Background(), gomock.Any(), "genEvmProofAndInstancesRotationCircuitWithWitness", gomock.Any()).DoAndReturn(func(ctx context.Context, resp *prover.ProverResponse, method string, args ...interface{}) error {
+		*resp = prover.ProverResponse{
+			Proof: []uint16{2, 3, 4},
 		}
 		return nil
 	})

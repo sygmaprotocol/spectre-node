@@ -5,7 +5,6 @@ package prover
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 
 	"github.com/attestantio/go-eth2-client/api"
@@ -91,14 +90,9 @@ func (p *Prover) StepProof() (*EvmProof[message.SyncStepInput], error) {
 	if err != nil {
 		return nil, err
 	}
-
 	updateSzz, err := args.Update.MarshalSSZ()
 	if err != nil {
 		return nil, err
-	}
-	var pubkeysSZZ []byte
-	for _, pubkeys := range args.Pubkeys {
-		pubkeysSZZ = append(pubkeysSZZ, pubkeys[:]...)
 	}
 
 	type stepArgs struct {
@@ -110,7 +104,7 @@ func (p *Prover) StepProof() (*EvmProof[message.SyncStepInput], error) {
 	var resp ProverResponse
 	err = p.proverClient.CallFor(context.Background(), &resp, "genEvmProofAndInstancesStepSyncCircuitWithWitness", stepArgs{
 		Spec:    args.Spec,
-		Pubkeys: ByteArrayToU16Array(pubkeysSZZ),
+		Pubkeys: ByteArrayToU16Array(p.pubkeysSSZ(args.Pubkeys)),
 		Update:  ByteArrayToU16Array(updateSzz),
 		Domain:  ByteArrayToU16Array(args.Domain[:]),
 	})
@@ -118,7 +112,7 @@ func (p *Prover) StepProof() (*EvmProof[message.SyncStepInput], error) {
 		return nil, err
 	}
 
-	log.Info().Msgf("Generated step proof %s", hex.EncodeToString(U16ArrayToByteArray(resp.Proof)))
+	log.Info().Msgf("Generated step proof")
 
 	finalizedHeaderRoot, err := args.Update.FinalizedHeader.Header.HashTreeRoot()
 	if err != nil {
@@ -128,7 +122,6 @@ func (p *Prover) StepProof() (*EvmProof[message.SyncStepInput], error) {
 	if err != nil {
 		return nil, err
 	}
-
 	proof := &EvmProof[message.SyncStepInput]{
 		Proof: U16ArrayToByteArray(resp.Proof),
 		Input: message.SyncStepInput{
@@ -148,18 +141,15 @@ func (p *Prover) RotateProof(epoch uint64) (*EvmProof[message.RotateInput], erro
 	if err != nil {
 		return nil, err
 	}
-
-	syncCommiteeRoot, err := p.committeeKeysRoot(args.Update.NextSyncCommittee.PubKeys)
+	syncCommiteeRoot, err := p.pubkeysRoot(args.Update.NextSyncCommittee.PubKeys)
 	if err != nil {
 		return nil, err
 	}
-
 	var commitmentResp CommitmentResponse
 	err = p.proverClient.CallFor(context.Background(), &commitmentResp, "syncCommitteePoseidonCompressed", CommitmentArgs{Pubkeys: args.Update.NextSyncCommittee.PubKeys})
 	if err != nil {
 		return nil, err
 	}
-
 	updateSzz, err := args.Update.MarshalSSZ()
 	if err != nil {
 		return nil, err
@@ -175,7 +165,7 @@ func (p *Prover) RotateProof(epoch uint64) (*EvmProof[message.RotateInput], erro
 		return nil, err
 	}
 
-	log.Info().Msgf("Generated rotate proof %s", hex.EncodeToString(U16ArrayToByteArray(resp.Proof)))
+	log.Info().Msgf("Generated rotate proof")
 
 	proof := &EvmProof[message.RotateInput]{
 		Proof: U16ArrayToByteArray(resp.Proof[:]),
@@ -233,12 +223,16 @@ func (p *Prover) rotateArgs(epoch uint64) (*RotateArgs, error) {
 	}, nil
 }
 
-func (p *Prover) committeeKeysRoot(pubkeys [512][48]byte) ([32]byte, error) {
-	var keysSSZ []byte
+func (p *Prover) pubkeysSSZ(pubkeys [512][48]byte) []byte {
+	var pubkeysSSZ []byte
 	for _, pubkeys := range pubkeys {
-		keysSSZ = append(keysSSZ, pubkeys[:]...)
+		pubkeysSSZ = append(pubkeysSSZ, pubkeys[:]...)
 	}
+	return pubkeysSSZ
+}
 
+func (p *Prover) pubkeysRoot(pubkeys [512][48]byte) ([32]byte, error) {
+	keysSSZ := p.pubkeysSSZ(pubkeys)
 	hh := ssz.NewHasher()
 	hh.PutBytes(keysSSZ)
 	return hh.HashRoot()

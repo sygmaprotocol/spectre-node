@@ -70,6 +70,7 @@ func (s *DepositHandlerTestSuite) SetupTest() {
 		s.mockStepProver,
 		common.HexToAddress("0xb0b13f0109ef097C3Aa70Fb543EA4942114A845d"),
 		1,
+		[]uint8{2, 3},
 		32)
 }
 
