@@ -160,7 +160,10 @@ func (p *Prover) RotateProof(epoch uint64) (*EvmProof[message.RotateInput], erro
 		return nil, err
 	}
 
-	updateSzz, _ := args.Update.MarshalSSZ()
+	updateSzz, err := args.Update.MarshalSSZ()
+	if err != nil {
+		return nil, err
+	}
 
 	type rotateArgs struct {
 		Update []uint16 `json:"light_client_update"`
@@ -231,9 +234,9 @@ func (p *Prover) rotateArgs(epoch uint64) (*RotateArgs, error) {
 }
 
 func (p *Prover) committeeKeysRoot(pubkeys [512][48]byte) ([32]byte, error) {
-	keysSSZ := make([]byte, 0)
-	for i := 0; i < 512; i++ {
-		keysSSZ = append(keysSSZ, pubkeys[i][:]...)
+	var keysSSZ []byte
+	for _, pubkeys := range pubkeys {
+		keysSSZ = append(keysSSZ, pubkeys[:]...)
 	}
 
 	hh := ssz.NewHasher()
