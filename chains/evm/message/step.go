@@ -23,7 +23,7 @@ type SyncStepInput struct {
 }
 
 type StepData struct {
-	Proof [32]byte
+	Proof []byte
 	Args  SyncStepInput
 }
 

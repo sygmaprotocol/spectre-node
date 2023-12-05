@@ -20,9 +20,9 @@ type RotateInput struct {
 }
 
 type RotateData struct {
-	RotateProof [32]byte
+	RotateProof []byte
 	RotateInput RotateInput
-	StepProof   [32]byte
+	StepProof   []byte
 	StepInput   SyncStepInput
 }
 

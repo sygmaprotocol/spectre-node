@@ -28,7 +28,7 @@ type RotateArgs struct {
 }
 
 type ProverResponse struct {
-	Proof [32]uint16 `json:"proof"`
+	Proof []uint16 `json:"proof"`
 }
 
 type CommitmentResponse struct {
@@ -40,7 +40,7 @@ type CommitmentArgs struct {
 }
 
 type EvmProof[T any] struct {
-	Proof [32]byte
+	Proof []byte
 	Input T
 }
 
@@ -129,7 +129,7 @@ func (p *Prover) StepProof() (*EvmProof[message.SyncStepInput], error) {
 		participation += uint64(byte)
 	}
 	proof := &EvmProof[message.SyncStepInput]{
-		Proof: U16ArrayTo32ByteArray(resp.Proof[:]),
+		Proof: U16ArrayToByteArray(resp.Proof[:]),
 		Input: message.SyncStepInput{
 			AttestedSlot:         args.Update.AttestedHeader.Header.Slot,
 			FinalizedSlot:        args.Update.FinalizedHeader.Header.Slot,
@@ -174,7 +174,7 @@ func (p *Prover) RotateProof(epoch uint64) (*EvmProof[message.RotateInput], erro
 	log.Info().Msgf("Generated rotate proof %v", resp.Proof)
 
 	proof := &EvmProof[message.RotateInput]{
-		Proof: U16ArrayTo32ByteArray(resp.Proof[:]),
+		Proof: U16ArrayToByteArray(resp.Proof[:]),
 		Input: message.RotateInput{
 			SyncCommitteeSSZ:      syncCommiteeRoot,
 			SyncCommitteePoseidon: commitmentResp.Commitment,
@@ -250,6 +250,14 @@ func ByteArrayToU16Array(src []byte) []uint16 {
 
 func U16ArrayTo32ByteArray(src []uint16) [32]byte {
 	dst := [32]byte{}
+	for i, value := range src {
+		dst[i] = byte(value)
+	}
+	return dst
+}
+
+func U16ArrayToByteArray(src []uint16) []byte {
+	dst := make([]byte, len(src))
 	for i, value := range src {
 		dst[i] = byte(value)
 	}
