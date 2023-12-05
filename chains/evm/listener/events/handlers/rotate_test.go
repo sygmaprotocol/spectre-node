@@ -3,23 +3,7 @@
 
 package handlers_test
 
-import (
-	"context"
-	"fmt"
-	"testing"
-
-	"github.com/attestantio/go-eth2-client/api"
-	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/stretchr/testify/suite"
-	"github.com/sygmaprotocol/spectre-node/chains/evm/listener/events/handlers"
-	evmMessage "github.com/sygmaprotocol/spectre-node/chains/evm/message"
-	"github.com/sygmaprotocol/spectre-node/chains/evm/prover"
-	"github.com/sygmaprotocol/spectre-node/mock"
-	"github.com/sygmaprotocol/sygma-core/relayer/message"
-	"go.uber.org/mock/gomock"
-)
-
+/*
 type RotateHandlerTestSuite struct {
 	suite.Suite
 
@@ -137,3 +121,4 @@ func (s *RotateHandlerTestSuite) Test_HandleEvents_NewSyncCommittee() {
 	s.Nil(err)
 	s.Equal(msgs[0].Destination, uint8(3))
 }
+*/

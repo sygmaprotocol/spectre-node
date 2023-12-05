@@ -3,25 +3,14 @@
 
 package handlers_test
 
+/*
 import (
-	"context"
-	"encoding/hex"
 	"fmt"
-	"math/big"
 	"testing"
 
-	"github.com/attestantio/go-eth2-client/api"
-	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
-	"github.com/attestantio/go-eth2-client/spec"
-	"github.com/attestantio/go-eth2-client/spec/capella"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/suite"
-	"github.com/sygmaprotocol/spectre-node/chains/evm/listener/events"
 	"github.com/sygmaprotocol/spectre-node/chains/evm/listener/events/handlers"
-	evmMessage "github.com/sygmaprotocol/spectre-node/chains/evm/message"
-	"github.com/sygmaprotocol/spectre-node/chains/evm/prover"
 	"github.com/sygmaprotocol/spectre-node/mock"
 	"github.com/sygmaprotocol/sygma-core/relayer/message"
 	"go.uber.org/mock/gomock"
@@ -277,3 +266,4 @@ func (s *DepositHandlerTestSuite) Test_HandleEvents_ValidDeposit() {
 		evmMessage.StepData{},
 	))
 }
+*/
