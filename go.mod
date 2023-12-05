@@ -11,6 +11,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/sygmaprotocol/sygma-core v0.0.0-20231023115554-62219e098d0d
 	github.com/umbracle/go-eth-consensus v0.1.3-0.20230605085523-929b6624372a
+	github.com/ybbus/jsonrpc/v3 v3.1.5
 	go.uber.org/mock v0.3.0
 
 )
@@ -61,7 +62,6 @@ require (
 	github.com/syndtr/goleveldb v1.0.1-0.20220614013038-64ee5596c38a // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
-	github.com/ybbus/jsonrpc/v3 v3.1.5 // indirect
 	go.opentelemetry.io/otel v1.16.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/internal/retry v1.16.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric v0.39.0 // indirect
