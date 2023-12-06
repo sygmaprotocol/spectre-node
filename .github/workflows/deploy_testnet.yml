@@ -4,9 +4,9 @@
 name: spectre_testnet
 
 on:
-  release:
-    types:
-      - published
+  push:
+    branches:
+      - main
       
 env:
   ENVIRONMENT: 'TESTNET'
@@ -46,14 +46,6 @@ jobs:
           push: true
           tags: ${{ env.REGISTRY }}/${{ github.repository }}:${{ env.TAG }}
 
-      - name: tag version / push docker image into ghcr
-        id: build-and-push-ref
-        uses: docker/build-push-action@v3
-        with:
-          context: .
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ github.repository }}:${{ github.ref_name }}
-
           ######################## region 1 ########################
   deploy:
     needs: push
@@ -88,7 +80,6 @@ jobs:
             awsAccountId=${{ env.AWS_TESTNET }}
             awsRegion=${{ secrets.AWS_REGION }}
             awsEfs=${{ secrets.SPECTRE_EFS_TESTNET }}
-            image_Tag=${{ github.ref_name }}
 
       - name: configure aws credentials
         uses: aws-actions/configure-aws-credentials@v1
