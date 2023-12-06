@@ -4,6 +4,8 @@
 package message
 
 import (
+	"math/big"
+
 	"github.com/rs/zerolog/log"
 	"github.com/sygmaprotocol/sygma-core/relayer/message"
 	"github.com/sygmaprotocol/sygma-core/relayer/proposal"
@@ -17,6 +19,7 @@ const (
 type RotateInput struct {
 	SyncCommitteeSSZ      [32]byte
 	SyncCommitteePoseidon [32]byte
+	Accumulator           [12]*big.Int
 }
 
 type RotateData struct {
