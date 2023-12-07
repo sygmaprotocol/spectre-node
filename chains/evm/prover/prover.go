@@ -90,7 +90,8 @@ func NewProver(
 
 // StepProof generates the proof for the sync step
 func (p *Prover) StepProof() (*EvmProof[message.SyncStepInput], error) {
-	log.Info().Msgf("Runing step proof...")
+	log := log.With().Str("Caller", "Prover.StepProof()").Logger()
+	log.Info().Msgf("Running step proof...")
 
 	args, err := p.stepArgs()
 	if err != nil {
@@ -108,6 +109,7 @@ func (p *Prover) StepProof() (*EvmProof[message.SyncStepInput], error) {
 		Update  []uint16 `json:"light_client_finality_update"`
 	}
 	var resp ProverResponse
+	log.Info().Msgf("Calling RPC for Step proof...")
 	err = p.proverClient.CallFor(context.Background(), &resp, "genEvmProofAndInstancesStepSyncCircuitWithWitness", stepArgs{
 		Spec:    args.Spec,
 		Pubkeys: ByteArrayToU16Array(p.pubkeysSSZ(args.Pubkeys)),
@@ -118,7 +120,7 @@ func (p *Prover) StepProof() (*EvmProof[message.SyncStepInput], error) {
 		return nil, err
 	}
 
-	log.Info().Msgf("Generated step proof %s", hex.EncodeToString(U16ArrayToByteArray(resp.Proof)))
+	log.Info().Msgf("Generated step proof")
 
 	finalizedHeaderRoot, err := args.Update.FinalizedHeader.Header.HashTreeRoot()
 	if err != nil {
@@ -128,13 +130,11 @@ func (p *Prover) StepProof() (*EvmProof[message.SyncStepInput], error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(args.Update.AttestedHeader.Header.Slot)
-	fmt.Println(args.Update.FinalizedHeader.Header.Slot)
-	fmt.Println(uint64(CountSetBits(args.Update.SyncAggregate.SyncCommiteeBits)))
-	fmt.Println("FINALIZED HEADER ROOT")
-	fmt.Println(hex.EncodeToString(finalizedHeaderRoot[:]))
-	fmt.Println(finalizedHeaderRoot)
-	fmt.Println(hex.EncodeToString(executionRoot[:]))
+	log.Info().Msgf("Attested Header Slot: %d", args.Update.AttestedHeader.Header.Slot)
+	log.Info().Msgf("Finalized Header Slot: %d", args.Update.FinalizedHeader.Header.Slot)
+	log.Info().Msgf("Sync Count: %d", uint64(CountSetBits(args.Update.SyncAggregate.SyncCommiteeBits)))
+	log.Info().Msgf("FINALIZED HEADER ROOT: %s", hex.EncodeToString(finalizedHeaderRoot[:]))
+	log.Info().Msgf("Execution Root %s", hex.EncodeToString(executionRoot[:]))
 	proof := &EvmProof[message.SyncStepInput]{
 		Proof: U16ArrayToByteArray(resp.Proof),
 		Input: message.SyncStepInput{
@@ -150,6 +150,8 @@ func (p *Prover) StepProof() (*EvmProof[message.SyncStepInput], error) {
 
 // RotateProof generates the proof for the sync committee rotation for the period
 func (p *Prover) RotateProof(epoch uint64) (*EvmProof[message.RotateInput], error) {
+	log := log.With().Str("Caller", "Prover.RotateProof()").Logger()
+	log.Info().Msgf("Running Rotate Proof...")
 	args, err := p.rotateArgs(epoch)
 	if err != nil {
 		return nil, err
@@ -168,12 +170,13 @@ func (p *Prover) RotateProof(epoch uint64) (*EvmProof[message.RotateInput], erro
 		Spec   Spec     `json:"spec"`
 	}
 	var resp ProverResponse
+	log.Info().Msgf("Calling RPC for Rotate proof...")
 	err = p.proverClient.CallFor(context.Background(), &resp, "genEvmProofAndInstancesRotationCircuitWithWitness", rotateArgs{Update: ByteArrayToU16Array(updateSzz), Spec: args.Spec})
 	if err != nil {
 		return nil, err
 	}
 
-	log.Info().Msgf("Generated rotate proof %s", hex.EncodeToString(U16ArrayToByteArray(resp.Proof)))
+	log.Info().Msgf("Generated rotate proof")
 
 	comm, _ := hex.DecodeString(resp.Commitment[2:])
 	if err != nil {
@@ -185,11 +188,10 @@ func (p *Prover) RotateProof(epoch uint64) (*EvmProof[message.RotateInput], erro
 		accumulator[i], _ = new(big.Int).SetString(value[2:], 16)
 	}
 
-	fmt.Println("SSZ COMMITEE")
-	fmt.Println(syncCommiteeRoot)
-	fmt.Println(hex.EncodeToString(syncCommiteeRoot[:]))
-	fmt.Println("POSEIDON")
-	fmt.Println(hex.EncodeToString(comm))
+	log.Info().Msgf("Sync CommitteeRoot Bytes: %b", syncCommiteeRoot)
+	log.Info().Msg(hex.EncodeToString(syncCommiteeRoot[:]))
+	log.Info().Msg("POSEIDON")
+	log.Info().Msg(hex.EncodeToString(comm))
 	proof := &EvmProof[message.RotateInput]{
 		Proof: U16ArrayToByteArray(resp.Proof),
 		Input: message.RotateInput{
