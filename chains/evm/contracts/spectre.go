@@ -38,16 +38,17 @@ func (c *Spectre) Step(stepInput message.SyncStepInput, stepProof []byte, opts t
 }
 
 func (c *Spectre) Rotate(rotateInput message.RotateInput, rotateProof []byte, stepInput message.SyncStepInput, stepProof []byte, opts transactor.TransactOptions) (*common.Hash, error) {
-	type ContractRotateInput struct {
+	type RotateInput struct {
 		SyncCommitteeSSZ      [32]byte
 		SyncCommitteePoseidon [32]byte
+	}
+	rInput := RotateInput{
+		SyncCommitteeSSZ:      rotateInput.SyncCommitteeSSZ,
+		SyncCommitteePoseidon: rotateInput.SyncCommitteePoseidon,
 	}
 	return c.ExecuteTransaction(
 		"rotate",
 		opts,
-		ContractRotateInput{
-			SyncCommitteeSSZ:      rotateInput.SyncCommitteeSSZ,
-			SyncCommitteePoseidon: rotateInput.SyncCommitteePoseidon,
-		}, rotateProof, stepInput, stepProof, rotateInput.Accumulator,
+		rInput, rotateProof, stepInput, stepProof, rotateInput.Accumulator,
 	)
 }
