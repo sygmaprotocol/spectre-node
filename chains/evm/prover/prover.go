@@ -89,14 +89,10 @@ func NewProver(
 }
 
 // StepProof generates the proof for the sync step
-func (p *Prover) StepProof() (*EvmProof[message.SyncStepInput], error) {
+func (p *Prover) StepProof(args *StepArgs) (*EvmProof[message.SyncStepInput], error) {
 	log := log.With().Str("Caller", "Prover.StepProof()").Logger()
 	log.Info().Msgf("Running step proof...")
 
-	args, err := p.stepArgs()
-	if err != nil {
-		return nil, err
-	}
 	updateSzz, err := args.Update.MarshalSSZ()
 	if err != nil {
 		return nil, err
@@ -149,13 +145,10 @@ func (p *Prover) StepProof() (*EvmProof[message.SyncStepInput], error) {
 }
 
 // RotateProof generates the proof for the sync committee rotation for the period
-func (p *Prover) RotateProof(epoch uint64) (*EvmProof[message.RotateInput], error) {
+func (p *Prover) RotateProof(args *RotateArgs) (*EvmProof[message.RotateInput], error) {
 	log := log.With().Str("Caller", "Prover.RotateProof()").Logger()
 	log.Info().Msgf("Running Rotate Proof...")
-	args, err := p.rotateArgs(epoch)
-	if err != nil {
-		return nil, err
-	}
+
 	syncCommiteeRoot, err := p.pubkeysRoot(args.Update.NextSyncCommittee.PubKeys)
 	if err != nil {
 		return nil, err
@@ -203,7 +196,7 @@ func (p *Prover) RotateProof(epoch uint64) (*EvmProof[message.RotateInput], erro
 	return proof, nil
 }
 
-func (p *Prover) stepArgs() (*StepArgs, error) {
+func (p *Prover) StepArgs() (*StepArgs, error) {
 	update, err := p.lightClient.FinalityUpdate()
 	if err != nil {
 		return nil, err
@@ -233,7 +226,7 @@ func (p *Prover) stepArgs() (*StepArgs, error) {
 	}, nil
 }
 
-func (p *Prover) rotateArgs(epoch uint64) (*RotateArgs, error) {
+func (p *Prover) RotateArgs(epoch uint64) (*RotateArgs, error) {
 	period := epoch / p.committeePeriodLength
 	updates, err := p.lightClient.Updates(period)
 	if err != nil {

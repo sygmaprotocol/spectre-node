@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	evmMessage "github.com/sygmaprotocol/spectre-node/chains/evm/message"
 	"github.com/sygmaprotocol/sygma-core/relayer/message"
+	consensus "github.com/umbracle/go-eth-consensus"
 )
 
 type SyncCommitteeFetcher interface {
@@ -54,11 +55,27 @@ func (h *RotateHandler) HandleEvents(checkpoint *apiv1.Finality) error {
 
 	log.Info().Uint8("domainID", h.domainID).Msgf("Rotating committee")
 
-	rotateProof, err := h.prover.RotateProof(uint64(checkpoint.Justified.Epoch))
+	rArgs, err := h.prover.RotateArgs(uint64(checkpoint.Justified.Epoch))
 	if err != nil {
 		return err
 	}
-	stepProof, err := h.prover.StepProof()
+	sArgs, err := h.prover.StepArgs()
+	if err != nil {
+		return err
+	}
+	sArgs.Update = &consensus.LightClientFinalityUpdateCapella{
+		AttestedHeader:  rArgs.Update.AttestedHeader,
+		FinalizedHeader: rArgs.Update.FinalizedHeader,
+		FinalityBranch:  rArgs.Update.FinalityBranch,
+		SyncAggregate:   rArgs.Update.SyncAggregate,
+		SignatureSlot:   rArgs.Update.SignatureSlot,
+	}
+
+	rotateProof, err := h.prover.RotateProof(rArgs)
+	if err != nil {
+		return err
+	}
+	stepProof, err := h.prover.StepProof(sArgs)
 	if err != nil {
 		return err
 	}

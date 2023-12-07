@@ -26,8 +26,10 @@ type EventFetcher interface {
 }
 
 type Prover interface {
-	StepProof() (*prover.EvmProof[evmMessage.SyncStepInput], error)
-	RotateProof(epoch uint64) (*prover.EvmProof[evmMessage.RotateInput], error)
+	StepProof(args *prover.StepArgs) (*prover.EvmProof[evmMessage.SyncStepInput], error)
+	RotateProof(args *prover.RotateArgs) (*prover.EvmProof[evmMessage.RotateInput], error)
+	StepArgs() (*prover.StepArgs, error)
+	RotateArgs(epoch uint64) (*prover.RotateArgs, error)
 }
 
 type BlockFetcher interface {
@@ -98,7 +100,12 @@ func (h *DepositEventHandler) HandleEvents(checkpoint *apiv1.Finality) error {
 	*/
 	log.Info().Uint8("domainID", h.domainID).Msgf("Generating step proof")
 
-	proof, err := h.prover.StepProof()
+	args, err := h.prover.StepArgs()
+	if err != nil {
+		return err
+	}
+
+	proof, err := h.prover.StepProof(args)
 	if err != nil {
 		return err
 	}
