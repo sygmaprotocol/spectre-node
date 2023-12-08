@@ -110,6 +110,10 @@ func (h *DepositEventHandler) HandleEvents(checkpoint *apiv1.Finality) error {
 		return err
 	}
 	for _, destDomain := range h.domains {
+		if destDomain == h.domainID {
+			continue
+		}
+
 		log.Debug().Uint8("domainID", h.domainID).Msgf("Sending step message to domain %d", destDomain)
 		h.msgChan <- []*message.Message{
 			evmMessage.NewEvmStepMessage(
