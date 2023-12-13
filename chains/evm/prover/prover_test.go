@@ -99,7 +99,7 @@ func (s *ProverTestSuite) Test_StepProof_InvalidProof() {
 		},
 	}, nil)
 	s.beaconClientMock.EXPECT().Domain(gomock.Any(), gomock.Any(), gomock.Any()).Return(phase0.Domain{}, nil)
-	s.proverClientMock.EXPECT().CallFor(context.Background(), gomock.Any(), "genEvmProofAndInstancesStepSyncCircuitWithWitness", gomock.Any()).Return(fmt.Errorf("error"))
+	s.proverClientMock.EXPECT().CallFor(context.Background(), gomock.Any(), "genEvmProof_SyncStepCompressed", gomock.Any()).Return(fmt.Errorf("error"))
 
 	_, err := s.prover.StepProof()
 
@@ -134,7 +134,7 @@ func (s *ProverTestSuite) Test_StepProof_ValidProof() {
 		},
 	}, nil)
 	s.beaconClientMock.EXPECT().Domain(gomock.Any(), gomock.Any(), gomock.Any()).Return(phase0.Domain{}, nil)
-	s.proverClientMock.EXPECT().CallFor(context.Background(), gomock.Any(), "genEvmProofAndInstancesStepSyncCircuitWithWitness", gomock.Any()).DoAndReturn(func(ctx context.Context, reply *prover.ProverResponse, method string, args ...interface{}) error {
+	s.proverClientMock.EXPECT().CallFor(context.Background(), gomock.Any(), "genEvmProof_SyncStepCompressed", gomock.Any()).DoAndReturn(func(ctx context.Context, reply *prover.ProverResponse, method string, args ...interface{}) error {
 		*reply = prover.ProverResponse{
 			Proof: []uint16{1, 2, 3},
 		}
@@ -183,7 +183,7 @@ func (s *ProverTestSuite) Test_RotateProof_InvalidProof() {
 		}
 		return nil
 	})
-	s.proverClientMock.EXPECT().CallFor(context.Background(), gomock.Any(), "genEvmProofAndInstancesRotationCircuitWithWitness", gomock.Any()).Return(fmt.Errorf("error"))
+	s.proverClientMock.EXPECT().CallFor(context.Background(), gomock.Any(), "genEvmProof_SyncStepCompressed", gomock.Any()).Return(fmt.Errorf("error"))
 
 	_, err := s.prover.RotateProof(10000)
 
@@ -204,7 +204,7 @@ func (s *ProverTestSuite) Test_RotateProof_ValidProof() {
 		}
 		return nil
 	})
-	s.proverClientMock.EXPECT().CallFor(context.Background(), gomock.Any(), "genEvmProofAndInstancesRotationCircuitWithWitness", gomock.Any()).DoAndReturn(func(ctx context.Context, resp *prover.ProverResponse, method string, args ...interface{}) error {
+	s.proverClientMock.EXPECT().CallFor(context.Background(), gomock.Any(), "genEvmProof_SyncStepCompressed", gomock.Any()).DoAndReturn(func(ctx context.Context, resp *prover.ProverResponse, method string, args ...interface{}) error {
 		*resp = prover.ProverResponse{
 			Proof: []uint16{2, 3, 4},
 		}

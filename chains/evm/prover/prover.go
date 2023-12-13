@@ -106,7 +106,7 @@ func (p *Prover) StepProof(args *StepArgs) (*EvmProof[message.SyncStepInput], er
 	}
 	var resp ProverResponse
 	log.Info().Msgf("Calling RPC for Step proof...")
-	err = p.proverClient.CallFor(context.Background(), &resp, "genEvmProofAndInstancesStepSyncCircuitWithWitness", stepArgs{
+	err = p.proverClient.CallFor(context.Background(), &resp, "genEvmProof_SyncStepCompressed", stepArgs{
 		Spec:    args.Spec,
 		Pubkeys: ByteArrayToU16Array(p.pubkeysSSZ(args.Pubkeys)),
 		Update:  ByteArrayToU16Array(updateSzz),
@@ -114,6 +114,11 @@ func (p *Prover) StepProof(args *StepArgs) (*EvmProof[message.SyncStepInput], er
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	accumulator := [12]*big.Int{}
+	for i, value := range resp.Accumulator {
+		accumulator[i], _ = new(big.Int).SetString(value[2:], 16)
 	}
 
 	log.Info().Msgf("Generated step proof")
@@ -139,6 +144,7 @@ func (p *Prover) StepProof(args *StepArgs) (*EvmProof[message.SyncStepInput], er
 			Participation:        uint64(CountSetBits(args.Update.SyncAggregate.SyncCommiteeBits)),
 			FinalizedHeaderRoot:  finalizedHeaderRoot,
 			ExecutionPayloadRoot: executionRoot,
+			Accumulator:          accumulator,
 		},
 	}
 	return proof, nil
@@ -164,14 +170,14 @@ func (p *Prover) RotateProof(args *RotateArgs) (*EvmProof[message.RotateInput], 
 	}
 	var resp ProverResponse
 	log.Info().Msgf("Calling RPC for Rotate proof...")
-	err = p.proverClient.CallFor(context.Background(), &resp, "genEvmProofAndInstancesRotationCircuitWithWitness", rotateArgs{Update: ByteArrayToU16Array(updateSzz), Spec: args.Spec})
+	err = p.proverClient.CallFor(context.Background(), &resp, "genEvmProof_CommitteeUpdate", rotateArgs{Update: ByteArrayToU16Array(updateSzz), Spec: args.Spec})
 	if err != nil {
 		return nil, err
 	}
 
 	log.Info().Msgf("Generated rotate proof")
 
-	comm, _ := hex.DecodeString(resp.Commitment[2:])
+	comm, _ := new(big.Int).SetString(resp.Commitment[2:], 16)
 	if err != nil {
 		return nil, err
 	}
@@ -184,12 +190,12 @@ func (p *Prover) RotateProof(args *RotateArgs) (*EvmProof[message.RotateInput], 
 	log.Info().Msgf("Sync CommitteeRoot Bytes: %b", syncCommiteeRoot)
 	log.Info().Msg(hex.EncodeToString(syncCommiteeRoot[:]))
 	log.Info().Msg("POSEIDON")
-	log.Info().Msg(hex.EncodeToString(comm))
+	log.Info().Msg(comm.String())
 	proof := &EvmProof[message.RotateInput]{
 		Proof: U16ArrayToByteArray(resp.Proof),
 		Input: message.RotateInput{
 			SyncCommitteeSSZ:      syncCommiteeRoot,
-			SyncCommitteePoseidon: SliceTo32Bytes(comm),
+			SyncCommitteePoseidon: comm,
 			Accumulator:           accumulator,
 		},
 	}

@@ -4,6 +4,8 @@
 package message
 
 import (
+	"math/big"
+
 	"github.com/rs/zerolog/log"
 	"github.com/sygmaprotocol/sygma-core/relayer/message"
 	"github.com/sygmaprotocol/sygma-core/relayer/proposal"
@@ -20,6 +22,7 @@ type SyncStepInput struct {
 	Participation        uint64
 	FinalizedHeaderRoot  [32]byte
 	ExecutionPayloadRoot [32]byte
+	Accumulator          [12]*big.Int
 }
 
 type StepData struct {

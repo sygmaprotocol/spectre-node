@@ -11,7 +11,6 @@ import (
 	"github.com/rs/zerolog/log"
 	evmMessage "github.com/sygmaprotocol/spectre-node/chains/evm/message"
 	"github.com/sygmaprotocol/sygma-core/relayer/message"
-	consensus "github.com/umbracle/go-eth-consensus"
 )
 
 type SyncCommitteeFetcher interface {
@@ -30,13 +29,19 @@ type RotateHandler struct {
 }
 
 func NewRotateHandler(msgChan chan []*message.Message, syncCommitteeFetcher SyncCommitteeFetcher, prover Prover, domainID uint8, domains []uint8) *RotateHandler {
+	currentSyncCommittee, err := syncCommitteeFetcher.SyncCommittee(context.Background(), &api.SyncCommitteeOpts{
+		State: "justified",
+	})
+	if err != nil {
+		log.Fatal().Err(err)
+	}
 	return &RotateHandler{
 		syncCommitteeFetcher: syncCommitteeFetcher,
 		prover:               prover,
 		domainID:             domainID,
 		domains:              domains,
 		msgChan:              msgChan,
-		currentSyncCommittee: &apiv1.SyncCommittee{},
+		currentSyncCommittee: currentSyncCommittee.Data,
 	}
 }
 
@@ -63,13 +68,13 @@ func (h *RotateHandler) HandleEvents(checkpoint *apiv1.Finality) error {
 	if err != nil {
 		return err
 	}
-	sArgs.Update = &consensus.LightClientFinalityUpdateCapella{
-		AttestedHeader:  rArgs.Update.AttestedHeader,
-		FinalizedHeader: rArgs.Update.FinalizedHeader,
-		FinalityBranch:  rArgs.Update.FinalityBranch,
-		SyncAggregate:   rArgs.Update.SyncAggregate,
-		SignatureSlot:   rArgs.Update.SignatureSlot,
-	}
+	// sArgs.Update = &consensus.LightClientFinalityUpdateCapella{
+	// 	AttestedHeader:  rArgs.Update.AttestedHeader,
+	// 	FinalizedHeader: rArgs.Update.FinalizedHeader,
+	// 	FinalityBranch:  rArgs.Update.FinalityBranch,
+	// 	SyncAggregate:   rArgs.Update.SyncAggregate,
+	// 	SignatureSlot:   rArgs.Update.SignatureSlot,
+	// }
 
 	rotateProof, err := h.prover.RotateProof(rArgs)
 	if err != nil {

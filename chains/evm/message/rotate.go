@@ -18,7 +18,7 @@ const (
 
 type RotateInput struct {
 	SyncCommitteeSSZ      [32]byte
-	SyncCommitteePoseidon [32]byte
+	SyncCommitteePoseidon *big.Int
 	Accumulator           [12]*big.Int
 }
 
