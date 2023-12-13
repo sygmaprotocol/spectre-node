@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
+	"strings"
 
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -33,14 +34,6 @@ type ProverResponse struct {
 	Accumulator [12]string `json:"accumulator"`
 	Proof       []uint16   `json:"proof"`
 	Commitment  string     `json:"committee_poseidon"`
-}
-
-type CommitmentResponse struct {
-	Commitment [32]byte `json:"commitment"`
-}
-
-type CommitmentArgs struct {
-	Pubkeys [512][48]byte `json:"pubkeys"`
 }
 
 type EvmProof[T any] struct {
@@ -131,11 +124,6 @@ func (p *Prover) StepProof(args *StepArgs) (*EvmProof[message.SyncStepInput], er
 	if err != nil {
 		return nil, err
 	}
-	log.Info().Msgf("Attested Header Slot: %d", args.Update.AttestedHeader.Header.Slot)
-	log.Info().Msgf("Finalized Header Slot: %d", args.Update.FinalizedHeader.Header.Slot)
-	log.Info().Msgf("Sync Count: %d", uint64(CountSetBits(args.Update.SyncAggregate.SyncCommiteeBits)))
-	log.Info().Msgf("FINALIZED HEADER ROOT: %s", hex.EncodeToString(finalizedHeaderRoot[:]))
-	log.Info().Msgf("Execution Root %s", hex.EncodeToString(executionRoot[:]))
 	proof := &EvmProof[message.SyncStepInput]{
 		Proof: U16ArrayToByteArray(resp.Proof),
 		Input: message.SyncStepInput{
@@ -187,10 +175,10 @@ func (p *Prover) RotateProof(args *RotateArgs) (*EvmProof[message.RotateInput], 
 		accumulator[i], _ = new(big.Int).SetString(value[2:], 16)
 	}
 
-	log.Info().Msgf("Sync CommitteeRoot Bytes: %b", syncCommiteeRoot)
-	log.Info().Msg(hex.EncodeToString(syncCommiteeRoot[:]))
-	log.Info().Msg("POSEIDON")
-	log.Info().Msg(comm.String())
+	// log.Info().Msgf("Sync CommitteeRoot Bytes: %b", syncCommiteeRoot)
+	// log.Info().Msg(hex.EncodeToString(syncCommiteeRoot[:]))
+	// log.Info().Msg("POSEIDON")
+	// log.Info().Msg(comm.String())
 	proof := &EvmProof[message.RotateInput]{
 		Proof: U16ArrayToByteArray(resp.Proof),
 		Input: message.RotateInput{
@@ -264,4 +252,19 @@ func (p *Prover) pubkeysRoot(pubkeys [512][48]byte) ([32]byte, error) {
 	}
 	h.Merkleize(subIndx)
 	return h.HashRoot()
+}
+
+func padHexString(hexString string, desiredLength int) string {
+	currentLength := len(hexString)
+	if currentLength >= desiredLength {
+		return hexString
+	}
+
+	// Calculate the number of leading zeroes needed
+	leadingZeroes := strings.Repeat("0", desiredLength-currentLength)
+
+	// Concatenate the leading zeroes with the original hex string
+	paddedHexString := leadingZeroes + hexString
+
+	return paddedHexString
 }

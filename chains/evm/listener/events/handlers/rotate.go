@@ -48,6 +48,18 @@ func NewRotateHandler(msgChan chan []*message.Message, syncCommitteeFetcher Sync
 // HandleEvents checks if there is a new sync committee and sends a rotate message
 // if there is
 func (h *RotateHandler) HandleEvents(checkpoint *apiv1.Finality) error {
+	sArgs, err := h.prover.StepArgs()
+	if err != nil {
+		return err
+	}
+	rArgs, err := h.prover.RotateArgs(uint64(checkpoint.Justified.Epoch))
+	if err != nil {
+		return err
+	}
+
+	if sArgs.Update.FinalizedHeader.Header.Slot != rArgs.Update.AttestedHeader.Header.Slot {
+		return nil
+	}
 	syncCommittee, err := h.syncCommitteeFetcher.SyncCommittee(context.Background(), &api.SyncCommitteeOpts{
 		State: "justified",
 	})
@@ -60,22 +72,6 @@ func (h *RotateHandler) HandleEvents(checkpoint *apiv1.Finality) error {
 
 	log.Info().Uint8("domainID", h.domainID).Msgf("Rotating committee")
 
-	rArgs, err := h.prover.RotateArgs(uint64(checkpoint.Justified.Epoch))
-	if err != nil {
-		return err
-	}
-	sArgs, err := h.prover.StepArgs()
-	if err != nil {
-		return err
-	}
-	// sArgs.Update = &consensus.LightClientFinalityUpdateCapella{
-	// 	AttestedHeader:  rArgs.Update.AttestedHeader,
-	// 	FinalizedHeader: rArgs.Update.FinalizedHeader,
-	// 	FinalityBranch:  rArgs.Update.FinalityBranch,
-	// 	SyncAggregate:   rArgs.Update.SyncAggregate,
-	// 	SignatureSlot:   rArgs.Update.SignatureSlot,
-	// }
-
 	rotateProof, err := h.prover.RotateProof(rArgs)
 	if err != nil {
 		return err
@@ -86,12 +82,9 @@ func (h *RotateHandler) HandleEvents(checkpoint *apiv1.Finality) error {
 	}
 
 	for _, domain := range h.domains {
-		/*
-			TODO: removed for testing purposes
-			if domain == h.domainID {
-				continue
-			}
-		*/
+		if domain == h.domainID {
+			continue
+		}
 
 		log.Debug().Uint8("domainID", h.domainID).Msgf("Sending rotate message to domain %d", domain)
 		h.msgChan <- []*message.Message{
