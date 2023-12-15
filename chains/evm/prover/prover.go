@@ -157,7 +157,7 @@ func (p *Prover) RotateProof(args *RotateArgs) (*EvmProof[message.RotateInput], 
 	}
 	var resp ProverResponse
 	log.Info().Msgf("Calling RPC for Rotate proof...")
-	err = p.proverClient.CallFor(context.Background(), &resp, "genEvmProof_CommitteeUpdate", rotateArgs{Update: ByteArrayToU16Array(updateSzz), Spec: args.Spec})
+	err = p.proverClient.CallFor(context.Background(), &resp, "genEvmProof_CommitteeUpdateCompressed", rotateArgs{Update: ByteArrayToU16Array(updateSzz), Spec: args.Spec})
 	if err != nil {
 		return nil, err
 	}
