@@ -61,7 +61,7 @@ func (h *RotateHandler) HandleEvents(checkpoint *apiv1.Finality) error {
 		return nil
 	}
 	syncCommittee, err := h.syncCommitteeFetcher.SyncCommittee(context.Background(), &api.SyncCommitteeOpts{
-		State: "justified",
+		State: "finalized",
 	})
 	if err != nil {
 		return err
