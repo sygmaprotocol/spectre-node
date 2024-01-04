@@ -8,8 +8,9 @@ import "github.com/kelseyhightower/envconfig"
 const PREFIX = "SPECTRE"
 
 type Config struct {
-	Observability *Observability `env_config:"observability"`
-	Prover        *Prover        `env_config:"prover"`
+	Observability *Observability   `env_config:"observability"`
+	Prover        *Prover          `env_config:"prover"`
+	Domains       map[uint8]string `required:"true"`
 }
 
 type Observability struct {

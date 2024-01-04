@@ -4,6 +4,9 @@
 package message
 
 import (
+	"math/big"
+
+	"github.com/rs/zerolog/log"
 	"github.com/sygmaprotocol/sygma-core/relayer/message"
 	"github.com/sygmaprotocol/sygma-core/relayer/proposal"
 )
@@ -15,13 +18,14 @@ const (
 
 type RotateInput struct {
 	SyncCommitteeSSZ      [32]byte
-	SyncCommitteePoseidon [32]byte
+	SyncCommitteePoseidon *big.Int
+	Accumulator           [12]*big.Int
 }
 
 type RotateData struct {
-	RotateProof [32]byte
+	RotateProof []byte
 	RotateInput RotateInput
-	StepProof   [32]byte
+	StepProof   []byte
 	StepInput   SyncStepInput
 }
 
@@ -37,6 +41,8 @@ func NewEvmRotateMessage(source uint8, destination uint8, rotateData RotateData)
 type EvmRotateHandler struct{}
 
 func (h *EvmRotateHandler) HandleMessage(m *message.Message) (*proposal.Proposal, error) {
+	log.Debug().Uint8("domainID", m.Destination).Msgf("Received rotate message from domain %d", m.Source)
+
 	return &proposal.Proposal{
 		Source:      m.Source,
 		Destination: m.Destination,

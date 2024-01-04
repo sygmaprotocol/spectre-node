@@ -5,7 +5,6 @@ package handlers
 
 import (
 	"context"
-	"math/big"
 
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
@@ -42,7 +41,19 @@ func NewRotateHandler(msgChan chan []*message.Message, syncCommitteeFetcher Sync
 
 // HandleEvents checks if there is a new sync committee and sends a rotate message
 // if there is
-func (h *RotateHandler) HandleEvents(startBlock *big.Int, endBlock *big.Int) error {
+func (h *RotateHandler) HandleEvents(checkpoint *apiv1.Finality) error {
+	sArgs, err := h.prover.StepArgs()
+	if err != nil {
+		return err
+	}
+	rArgs, err := h.prover.RotateArgs(uint64(checkpoint.Justified.Epoch))
+	if err != nil {
+		return err
+	}
+
+	if sArgs.Update.FinalizedHeader.Header.Slot != rArgs.Update.AttestedHeader.Header.Slot {
+		return nil
+	}
 	syncCommittee, err := h.syncCommitteeFetcher.SyncCommittee(context.Background(), &api.SyncCommitteeOpts{
 		State: "finalized",
 	})
@@ -55,23 +66,27 @@ func (h *RotateHandler) HandleEvents(startBlock *big.Int, endBlock *big.Int) err
 
 	log.Info().Uint8("domainID", h.domainID).Msgf("Rotating committee")
 
-	stepProof, err := h.prover.StepProof(endBlock)
+	rotateProof, err := h.prover.RotateProof(rArgs)
 	if err != nil {
 		return err
 	}
-	rotateProof, err := h.prover.RotateProof(endBlock)
+	stepProof, err := h.prover.StepProof(sArgs)
 	if err != nil {
 		return err
 	}
 
 	for _, domain := range h.domains {
+		if domain == h.domainID {
+			continue
+		}
+
 		log.Debug().Uint8("domainID", h.domainID).Msgf("Sending rotate message to domain %d", domain)
 		h.msgChan <- []*message.Message{
 			evmMessage.NewEvmRotateMessage(h.domainID, domain, evmMessage.RotateData{
-				RotateInput: evmMessage.RotateInput{},
-				RotateProof: rotateProof,
-				StepProof:   stepProof,
-				StepInput:   evmMessage.SyncStepInput{},
+				RotateInput: rotateProof.Input,
+				RotateProof: rotateProof.Proof,
+				StepProof:   stepProof.Proof,
+				StepInput:   stepProof.Input,
 			}),
 		}
 	}

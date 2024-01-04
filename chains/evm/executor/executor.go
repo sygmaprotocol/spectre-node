@@ -14,8 +14,8 @@ import (
 )
 
 type ProofSubmitter interface {
-	Step(input message.SyncStepInput, stepProof [32]byte, opts transactor.TransactOptions) (*common.Hash, error)
-	Rotate(rotateInput message.RotateInput, rotateProof [32]byte, stepInput message.SyncStepInput, stepProof [32]byte, opts transactor.TransactOptions) (*common.Hash, error)
+	Step(input message.SyncStepInput, stepProof []byte, opts transactor.TransactOptions) (*common.Hash, error)
+	Rotate(rotateInput message.RotateInput, rotateProof []byte, stepInput message.SyncStepInput, stepProof []byte, opts transactor.TransactOptions) (*common.Hash, error)
 }
 
 type EVMExecutor struct {

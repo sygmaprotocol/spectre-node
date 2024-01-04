@@ -12,8 +12,6 @@ import (
 
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
-	"github.com/attestantio/go-eth2-client/spec"
-	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/suite"
 	"github.com/sygmaprotocol/spectre-node/chains/evm/listener"
@@ -43,7 +41,7 @@ func (s *ListenerTestSuite) SetupTest() {
 		[]listener.EventHandler{s.mockEventHandler, s.mockEventHandler},
 		1,
 		time.Millisecond*50,
-		big.NewInt(32))
+	)
 }
 
 func (s *ListenerTestSuite) Test_ListenToEvents_CheckpointUnavailable() {
@@ -72,26 +70,6 @@ func (s *ListenerTestSuite) Test_ListenToEvents_CheckpointNotUpdated() {
 	cancel()
 }
 
-func (s *ListenerTestSuite) Test_ListenToEvents_FetchingBlockFails() {
-	s.mockBeaconProvider.EXPECT().Finality(gomock.Any(), gomock.Any()).Return(&api.Response[*apiv1.Finality]{
-		Data: &apiv1.Finality{
-			Finalized: &phase0.Checkpoint{
-				Root: phase0.Root([32]byte{1}),
-			},
-			Justified: &phase0.Checkpoint{
-				Root: phase0.Root([32]byte{1}),
-			},
-		},
-	}, nil)
-	s.mockBeaconProvider.EXPECT().SignedBeaconBlock(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("error"))
-
-	ctx, cancel := context.WithCancel(context.Background())
-	go s.listener.ListenToEvents(ctx, big.NewInt(0))
-
-	time.Sleep(time.Millisecond * 25)
-	cancel()
-}
-
 func (s *ListenerTestSuite) Test_ListenToEvents_ValidCheckpoint() {
 	// First pass
 	s.mockBeaconProvider.EXPECT().Finality(gomock.Any(), gomock.Any()).Return(&api.Response[*apiv1.Finality]{
@@ -104,20 +82,7 @@ func (s *ListenerTestSuite) Test_ListenToEvents_ValidCheckpoint() {
 			},
 		},
 	}, nil)
-	s.mockBeaconProvider.EXPECT().SignedBeaconBlock(gomock.Any(), gomock.Any()).Return(&api.Response[*spec.VersionedSignedBeaconBlock]{
-		Data: &spec.VersionedSignedBeaconBlock{
-			Capella: &capella.SignedBeaconBlock{
-				Message: &capella.BeaconBlock{
-					Body: &capella.BeaconBlockBody{
-						ExecutionPayload: &capella.ExecutionPayload{
-							BlockNumber: 100,
-						},
-					},
-				},
-			},
-		},
-	}, nil)
-	s.mockEventHandler.EXPECT().HandleEvents(big.NewInt(68), big.NewInt(100)).Return(fmt.Errorf("error"))
+	s.mockEventHandler.EXPECT().HandleEvents(gomock.Any()).Return(fmt.Errorf("error"))
 
 	// Second pass
 	s.mockBeaconProvider.EXPECT().Finality(gomock.Any(), gomock.Any()).Return(&api.Response[*apiv1.Finality]{
@@ -130,21 +95,8 @@ func (s *ListenerTestSuite) Test_ListenToEvents_ValidCheckpoint() {
 			},
 		},
 	}, nil)
-	s.mockBeaconProvider.EXPECT().SignedBeaconBlock(gomock.Any(), gomock.Any()).Return(&api.Response[*spec.VersionedSignedBeaconBlock]{
-		Data: &spec.VersionedSignedBeaconBlock{
-			Capella: &capella.SignedBeaconBlock{
-				Message: &capella.BeaconBlock{
-					Body: &capella.BeaconBlockBody{
-						ExecutionPayload: &capella.ExecutionPayload{
-							BlockNumber: 100,
-						},
-					},
-				},
-			},
-		},
-	}, nil)
-	s.mockEventHandler.EXPECT().HandleEvents(big.NewInt(68), big.NewInt(100)).Return(nil)
-	s.mockEventHandler.EXPECT().HandleEvents(big.NewInt(68), big.NewInt(100)).Return(nil)
+	s.mockEventHandler.EXPECT().HandleEvents(gomock.Any()).Return(nil)
+	s.mockEventHandler.EXPECT().HandleEvents(gomock.Any()).Return(nil)
 	// Third pass
 	s.mockBeaconProvider.EXPECT().Finality(gomock.Any(), gomock.Any()).Return(&api.Response[*apiv1.Finality]{
 		Data: &apiv1.Finality{
@@ -160,6 +112,6 @@ func (s *ListenerTestSuite) Test_ListenToEvents_ValidCheckpoint() {
 	ctx, cancel := context.WithCancel(context.Background())
 	go s.listener.ListenToEvents(ctx, big.NewInt(0))
 
-	time.Sleep(time.Millisecond * 25)
+	time.Sleep(time.Millisecond * 75)
 	cancel()
 }

@@ -41,7 +41,7 @@ func (m *MockProofSubmitter) EXPECT() *MockProofSubmitterMockRecorder {
 }
 
 // Rotate mocks base method.
-func (m *MockProofSubmitter) Rotate(rotateInput message.RotateInput, rotateProof [32]byte, stepInput message.SyncStepInput, stepProof [32]byte, opts transactor.TransactOptions) (*common.Hash, error) {
+func (m *MockProofSubmitter) Rotate(rotateInput message.RotateInput, rotateProof []byte, stepInput message.SyncStepInput, stepProof []byte, opts transactor.TransactOptions) (*common.Hash, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Rotate", rotateInput, rotateProof, stepInput, stepProof, opts)
 	ret0, _ := ret[0].(*common.Hash)
@@ -56,7 +56,7 @@ func (mr *MockProofSubmitterMockRecorder) Rotate(rotateInput, rotateProof, stepI
 }
 
 // Step mocks base method.
-func (m *MockProofSubmitter) Step(input message.SyncStepInput, stepProof [32]byte, opts transactor.TransactOptions) (*common.Hash, error) {
+func (m *MockProofSubmitter) Step(input message.SyncStepInput, stepProof []byte, opts transactor.TransactOptions) (*common.Hash, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Step", input, stepProof, opts)
 	ret0, _ := ret[0].(*common.Hash)

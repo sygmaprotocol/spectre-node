@@ -31,9 +31,13 @@ func (s *ConfigTestSuite) Test_LoadConfig_MissingField() {
 
 func (s *ConfigTestSuite) Test_LoadConfig_DefaultValues() {
 	os.Setenv("SPECTRE_PROVER_URL", "http://prover.com")
+	os.Setenv("SPECTRE_DOMAINS", "1:evm,2:evm")
 
 	c, err := config.LoadConfig()
 
+	domains := make(map[uint8]string)
+	domains[1] = "evm"
+	domains[2] = "evm"
 	s.Nil(err)
 	s.Equal(c, &config.Config{
 		Observability: &config.Observability{
@@ -43,6 +47,7 @@ func (s *ConfigTestSuite) Test_LoadConfig_DefaultValues() {
 		Prover: &config.Prover{
 			URL: "http://prover.com",
 		},
+		Domains: domains,
 	})
 }
 
@@ -50,9 +55,13 @@ func (s *ConfigTestSuite) Test_LoadEVMConfig_SuccessfulLoad() {
 	os.Setenv("SPECTRE_OBSERVABILITY_LOG_LEVEL", "info")
 	os.Setenv("SPECTRE_OBSERVABILITY_LOG_FILE", "out2.log")
 	os.Setenv("SPECTRE_PROVER_URL", "http://prover.com")
+	os.Setenv("SPECTRE_DOMAINS", "1:evm,2:evm")
 
 	c, err := config.LoadConfig()
 
+	domains := make(map[uint8]string)
+	domains[1] = "evm"
+	domains[2] = "evm"
 	s.Nil(err)
 	s.Equal(c, &config.Config{
 		Observability: &config.Observability{
@@ -62,5 +71,6 @@ func (s *ConfigTestSuite) Test_LoadEVMConfig_SuccessfulLoad() {
 		Prover: &config.Prover{
 			URL: "http://prover.com",
 		},
+		Domains: domains,
 	})
 }
