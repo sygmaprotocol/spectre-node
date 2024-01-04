@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"math/big"
-	"strings"
 
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -239,19 +238,4 @@ func (p *Prover) pubkeysRoot(pubkeys [512][48]byte) ([32]byte, error) {
 	}
 	h.Merkleize(subIndx)
 	return h.HashRoot()
-}
-
-func padHexString(hexString string, desiredLength int) string {
-	currentLength := len(hexString)
-	if currentLength >= desiredLength {
-		return hexString
-	}
-
-	// Calculate the number of leading zeroes needed
-	leadingZeroes := strings.Repeat("0", desiredLength-currentLength)
-
-	// Concatenate the leading zeroes with the original hex string
-	paddedHexString := leadingZeroes + hexString
-
-	return paddedHexString
 }
