@@ -77,29 +77,6 @@ func NewDepositEventHandler(
 // HandleEvents fetches deposit events and if deposits exists, submits a step message
 // to be executed on the destination network
 func (h *DepositEventHandler) HandleEvents(checkpoint *apiv1.Finality) error {
-	/*
-			startBlock, endBlock, err := h.blockrange(checkpoint)
-			if err != nil {
-				return err
-			}
-
-			deposits, err := h.fetchDeposits(startBlock, endBlock)
-			if err != nil {
-				return fmt.Errorf("unable to fetch deposit events because of: %+v", err)
-			}
-			domainDeposits := make(map[uint8][]*events.Deposit)
-			for _, d := range deposits {
-				domainDeposits[d.DestinationDomainID] = append(domainDeposits[d.DestinationDomainID], d)
-			}
-			if len(domainDeposits) == 0 {
-				return nil
-			}
-
-		log.Info().Uint8("domainID", h.domainID).Msgf("Found deposits between blocks %s-%s", startBlock, endBlock)
-
-	*/
-	log.Info().Uint8("domainID", h.domainID).Msgf("Generating step proof")
-
 	args, err := h.prover.StepArgs()
 	if err != nil {
 		return err
@@ -128,50 +105,3 @@ func (h *DepositEventHandler) HandleEvents(checkpoint *apiv1.Finality) error {
 	}
 	return nil
 }
-
-/*
-func (h *DepositEventHandler) blockrange(checkpoint *apiv1.Finality) (*big.Int, *big.Int, error) {
-	justifiedRoot, err := h.blockFetcher.SignedBeaconBlock(context.Background(), &api.SignedBeaconBlockOpts{
-		Block: checkpoint.Justified.Root.String(),
-	})
-	if err != nil {
-		return nil, nil, err
-	}
-
-	endBlock := big.NewInt(int64(justifiedRoot.Data.Capella.Message.Body.ExecutionPayload.BlockNumber))
-	startBlock := new(big.Int).Sub(endBlock, big.NewInt(int64(h.blockInterval)))
-	return startBlock, endBlock, nil
-}
-
-func (h *DepositEventHandler) fetchDeposits(startBlock *big.Int, endBlock *big.Int) ([]*events.Deposit, error) {
-	logs, err := h.eventFetcher.FetchEventLogs(context.Background(), h.routerAddress, string(events.DepositSig), startBlock, endBlock)
-	if err != nil {
-		return nil, err
-	}
-
-	deposits := make([]*events.Deposit, 0)
-	for _, dl := range logs {
-		d, err := h.unpackDeposit(dl.Data)
-		if err != nil {
-			log.Error().Msgf("Failed unpacking deposit event log: %v", err)
-			continue
-		}
-		d.SenderAddress = common.BytesToAddress(dl.Topics[1].Bytes())
-
-		log.Debug().Msgf("Found deposit log in block: %d, TxHash: %s, contractAddress: %s, sender: %s", dl.BlockNumber, dl.TxHash, dl.Address, d.SenderAddress)
-		deposits = append(deposits, d)
-	}
-
-	return deposits, nil
-}
-
-func (h *DepositEventHandler) unpackDeposit(data []byte) (*events.Deposit, error) {
-	var d events.Deposit
-	err := h.routerABI.UnpackIntoInterface(&d, "Deposit", data)
-	if err != nil {
-		return &events.Deposit{}, err
-	}
-
-	return &d, nil
-}
-*/

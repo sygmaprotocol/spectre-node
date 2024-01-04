@@ -29,19 +29,13 @@ type RotateHandler struct {
 }
 
 func NewRotateHandler(msgChan chan []*message.Message, syncCommitteeFetcher SyncCommitteeFetcher, prover Prover, domainID uint8, domains []uint8) *RotateHandler {
-	currentSyncCommittee, err := syncCommitteeFetcher.SyncCommittee(context.Background(), &api.SyncCommitteeOpts{
-		State: "justified",
-	})
-	if err != nil {
-		log.Fatal().Err(err)
-	}
 	return &RotateHandler{
 		syncCommitteeFetcher: syncCommitteeFetcher,
 		prover:               prover,
 		domainID:             domainID,
 		domains:              domains,
 		msgChan:              msgChan,
-		currentSyncCommittee: currentSyncCommittee.Data,
+		currentSyncCommittee: &apiv1.SyncCommittee{},
 	}
 }
 

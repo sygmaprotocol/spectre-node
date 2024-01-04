@@ -82,9 +82,6 @@ func NewProver(
 
 // StepProof generates the proof for the sync step
 func (p *Prover) StepProof(args *StepArgs) (*EvmProof[message.SyncStepInput], error) {
-	log := log.With().Str("Caller", "Prover.StepProof()").Logger()
-	log.Info().Msgf("Running step proof...")
-
 	updateSzz, err := args.Update.MarshalSSZ()
 	if err != nil {
 		return nil, err
@@ -97,7 +94,6 @@ func (p *Prover) StepProof(args *StepArgs) (*EvmProof[message.SyncStepInput], er
 		Update  []uint16 `json:"light_client_finality_update"`
 	}
 	var resp ProverResponse
-	log.Info().Msgf("Calling RPC for Step proof...")
 	err = p.proverClient.CallFor(context.Background(), &resp, "genEvmProof_SyncStepCompressed", stepArgs{
 		Spec:    args.Spec,
 		Pubkeys: ByteArrayToU16Array(p.pubkeysSSZ(args.Pubkeys)),
@@ -139,9 +135,6 @@ func (p *Prover) StepProof(args *StepArgs) (*EvmProof[message.SyncStepInput], er
 
 // RotateProof generates the proof for the sync committee rotation for the period
 func (p *Prover) RotateProof(args *RotateArgs) (*EvmProof[message.RotateInput], error) {
-	log := log.With().Str("Caller", "Prover.RotateProof()").Logger()
-	log.Info().Msgf("Running Rotate Proof...")
-
 	syncCommiteeRoot, err := p.pubkeysRoot(args.Update.NextSyncCommittee.PubKeys)
 	if err != nil {
 		return nil, err
@@ -156,7 +149,6 @@ func (p *Prover) RotateProof(args *RotateArgs) (*EvmProof[message.RotateInput], 
 		Spec   Spec     `json:"spec"`
 	}
 	var resp ProverResponse
-	log.Info().Msgf("Calling RPC for Rotate proof...")
 	err = p.proverClient.CallFor(context.Background(), &resp, "genEvmProof_CommitteeUpdateCompressed", rotateArgs{Update: ByteArrayToU16Array(updateSzz), Spec: args.Spec})
 	if err != nil {
 		return nil, err
@@ -174,10 +166,6 @@ func (p *Prover) RotateProof(args *RotateArgs) (*EvmProof[message.RotateInput], 
 		accumulator[i], _ = new(big.Int).SetString(value[2:], 16)
 	}
 
-	// log.Info().Msgf("Sync CommitteeRoot Bytes: %b", syncCommiteeRoot)
-	// log.Info().Msg(hex.EncodeToString(syncCommiteeRoot[:]))
-	// log.Info().Msg("POSEIDON")
-	// log.Info().Msg(comm.String())
 	proof := &EvmProof[message.RotateInput]{
 		Proof: U16ArrayToByteArray(resp.Proof),
 		Input: message.RotateInput{
