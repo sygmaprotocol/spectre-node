@@ -220,7 +220,7 @@ func (p *Prover) RotateArgs(epoch uint64) (*RotateArgs, error) {
 	}
 	update := updates[0]
 
-	finalizedNextSyncCommitteeBranch := make([][32]byte, len(update.NextSyncCommitteeBranch)+1)
+	finalizedNextSyncCommitteeBranch := make([][32]byte, len(update.NextSyncCommitteeBranch))
 	blockRoot, err := p.beaconClient.BeaconBlockRoot(context.Background(), &api.BeaconBlockRootOpts{
 		Block: fmt.Sprint(update.FinalizedHeader.Header.Slot),
 	})
@@ -231,15 +231,10 @@ func (p *Prover) RotateArgs(epoch uint64) (*RotateArgs, error) {
 	if err != nil {
 		return nil, err
 	}
-	copy(finalizedNextSyncCommitteeBranch[1:], bootstrap.CurrentSyncCommitteeBranch)
 
-	aggregatePubkeyRoot, err := p.aggregatePubkeyRoot(update.NextSyncCommittee.AggregatePubKey)
-	if err != nil {
-		return nil, err
-	}
-	finalizedNextSyncCommitteeBranch[0] = aggregatePubkeyRoot
-	finalizedNextSyncCommitteeBranch[1] = update.NextSyncCommitteeBranch[0]
-	update.NextSyncCommitteeBranch = bootstrap.CurrentSyncCommitteeBranch
+	copy(finalizedNextSyncCommitteeBranch, bootstrap.CurrentSyncCommitteeBranch)
+	finalizedNextSyncCommitteeBranch[0] = update.NextSyncCommitteeBranch[0]
+	update.NextSyncCommitteeBranch = finalizedNextSyncCommitteeBranch
 
 	domain, err := p.beaconClient.Domain(context.Background(), SYNC_COMMITTEE_DOMAIN, phase0.Epoch(update.FinalizedHeader.Header.Slot/32))
 	if err != nil {
@@ -268,14 +263,6 @@ func (p *Prover) pubkeysRoot(pubkeys [512][48]byte) ([32]byte, error) {
 	for _, key := range pubkeys {
 		h.PutBytes(key[:])
 	}
-	h.Merkleize(subIndx)
-	return h.HashRoot()
-}
-
-func (p *Prover) aggregatePubkeyRoot(pubkey [48]byte) ([32]byte, error) {
-	h := ssz.NewHasher()
-	subIndx := h.Index()
-	h.PutBytes(pubkey[:])
 	h.Merkleize(subIndx)
 	return h.HashRoot()
 }
