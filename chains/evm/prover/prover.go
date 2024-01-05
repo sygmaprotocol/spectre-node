@@ -24,8 +24,10 @@ type StepArgs struct {
 }
 
 type RotateArgs struct {
-	Spec   Spec
-	Update *consensus.LightClientUpdateCapella
+	Spec    Spec
+	Update  *consensus.LightClientUpdateCapella
+	Pubkeys [512][48]byte
+	Domain  phase0.Domain
 }
 
 type ProverResponse struct {
@@ -134,6 +136,7 @@ func (p *Prover) StepProof(args *StepArgs) (*EvmProof[message.SyncStepInput], er
 
 // RotateProof generates the proof for the sync committee rotation for the period
 func (p *Prover) RotateProof(args *RotateArgs) (*EvmProof[message.RotateInput], error) {
+	args.Update.AttestedHeader = args.Update.FinalizedHeader
 	syncCommiteeRoot, err := p.pubkeysRoot(args.Update.NextSyncCommittee.PubKeys)
 	if err != nil {
 		return nil, err
@@ -216,9 +219,33 @@ func (p *Prover) RotateArgs(epoch uint64) (*RotateArgs, error) {
 		return nil, fmt.Errorf("missing light client updates")
 	}
 	update := updates[0]
+
+	finalizedNextSyncCommitteeBranch := make([][32]byte, len(update.NextSyncCommitteeBranch))
+	blockRoot, err := p.beaconClient.BeaconBlockRoot(context.Background(), &api.BeaconBlockRootOpts{
+		Block: fmt.Sprint(update.FinalizedHeader.Header.Slot),
+	})
+	if err != nil {
+		return nil, err
+	}
+	bootstrap, err := p.lightClient.Bootstrap(blockRoot.Data.String())
+	if err != nil {
+		return nil, err
+	}
+
+	copy(finalizedNextSyncCommitteeBranch, bootstrap.CurrentSyncCommitteeBranch)
+	finalizedNextSyncCommitteeBranch[0] = update.NextSyncCommitteeBranch[0]
+	update.NextSyncCommitteeBranch = finalizedNextSyncCommitteeBranch
+
+	domain, err := p.beaconClient.Domain(context.Background(), SYNC_COMMITTEE_DOMAIN, phase0.Epoch(update.FinalizedHeader.Header.Slot/32))
+	if err != nil {
+		return nil, err
+	}
+
 	return &RotateArgs{
-		Update: update,
-		Spec:   p.spec,
+		Update:  update,
+		Spec:    p.spec,
+		Pubkeys: bootstrap.CurrentSyncCommittee.PubKeys,
+		Domain:  domain,
 	}, nil
 }
 
