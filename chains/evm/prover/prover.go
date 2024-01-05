@@ -233,7 +233,7 @@ func (p *Prover) RotateArgs(epoch uint64) (*RotateArgs, error) {
 	}
 	copy(finalizedNextSyncCommitteeBranch[1:], bootstrap.CurrentSyncCommitteeBranch)
 
-	finalizedNextSyncCommitteeBranch[0] = update.NextSyncCommitteeBranch[0]
+	finalizedNextSyncCommitteeBranch[0] = p.aggregatePubkeyRoot(update.NextSyncCommittee.AggregatePubKey)
 	finalizedNextSyncCommitteeBranch[1] = update.NextSyncCommitteeBranch[1]
 	update.NextSyncCommitteeBranch = bootstrap.CurrentSyncCommitteeBranch
 
@@ -267,3 +267,10 @@ func (p *Prover) pubkeysRoot(pubkeys [512][48]byte) ([32]byte, error) {
 	h.Merkleize(subIndx)
 	return h.HashRoot()
 }
+
+func (p *Prover) aggregatePubkeyRoot(pubkey [48]byte) ([32]byte, error) {
+	h := ssz.NewHasher()
+	subIndx := h.Index()
+	h.PutBytes(pubkey[:])
+	h.Merkleize(subIndx)
+	return h.HashRoot()
