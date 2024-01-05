@@ -238,7 +238,7 @@ func (p *Prover) RotateArgs(epoch uint64) (*RotateArgs, error) {
 		return nil, err
 	}
 	finalizedNextSyncCommitteeBranch[0] = aggregatePubkeyRoot
-	finalizedNextSyncCommitteeBranch[1] = update.NextSyncCommitteeBranch[1]
+	finalizedNextSyncCommitteeBranch[1] = update.NextSyncCommitteeBranch[0]
 	update.NextSyncCommitteeBranch = bootstrap.CurrentSyncCommitteeBranch
 
 	domain, err := p.beaconClient.Domain(context.Background(), SYNC_COMMITTEE_DOMAIN, phase0.Epoch(update.FinalizedHeader.Header.Slot/32))
