@@ -136,9 +136,7 @@ func (p *Prover) StepProof(args *StepArgs) (*EvmProof[message.SyncStepInput], er
 
 // RotateProof generates the proof for the sync committee rotation for the period
 func (p *Prover) RotateProof(args *RotateArgs) (*EvmProof[message.RotateInput], error) {
-	// swap the attested and finalized header so the
 	args.Update.AttestedHeader = args.Update.FinalizedHeader
-
 	syncCommiteeRoot, err := p.pubkeysRoot(args.Update.NextSyncCommittee.PubKeys)
 	if err != nil {
 		return nil, err
