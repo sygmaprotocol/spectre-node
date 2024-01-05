@@ -44,7 +44,7 @@ func NewRotateHandler(msgChan chan []*message.Message, syncCommitteeFetcher Sync
 // HandleEvents checks if there is a new sync committee and sends a rotate message
 // if there is
 func (h *RotateHandler) HandleEvents(checkpoint *apiv1.Finality) error {
-	args, err := h.prover.RotateArgs(uint64(checkpoint.Justified.Epoch))
+	args, err := h.prover.RotateArgs(uint64(checkpoint.Finalized.Epoch))
 	if err != nil {
 		return err
 	}
