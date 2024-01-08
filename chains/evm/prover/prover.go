@@ -61,8 +61,7 @@ type Prover struct {
 	beaconClient BeaconClient
 	proverClient ProverClient
 
-	spec                  Spec
-	committeePeriodLength uint64
+	spec Spec
 }
 
 func NewProver(
@@ -70,14 +69,12 @@ func NewProver(
 	beaconClient BeaconClient,
 	lightClient LightClient,
 	spec Spec,
-	committeePeriodLength uint64,
 ) *Prover {
 	return &Prover{
-		proverClient:          proverClient,
-		spec:                  spec,
-		committeePeriodLength: committeePeriodLength,
-		beaconClient:          beaconClient,
-		lightClient:           lightClient,
+		proverClient: proverClient,
+		spec:         spec,
+		beaconClient: beaconClient,
+		lightClient:  lightClient,
 	}
 }
 
@@ -209,8 +206,7 @@ func (p *Prover) StepArgs() (*StepArgs, error) {
 	}, nil
 }
 
-func (p *Prover) RotateArgs(epoch uint64) (*RotateArgs, error) {
-	period := epoch / p.committeePeriodLength
+func (p *Prover) RotateArgs(period uint64) (*RotateArgs, error) {
 	updates, err := p.lightClient.Updates(period)
 	if err != nil {
 		return nil, err

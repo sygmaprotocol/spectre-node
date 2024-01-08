@@ -48,6 +48,9 @@ func (s *ConfigTestSuite) Test_LoadConfig_DefaultValues() {
 		Prover: &config.Prover{
 			URL: "http://prover.com",
 		},
+		Store: &config.Store{
+			Path: "./lvldbdata",
+		},
 		Domains: domains,
 	})
 }
@@ -56,6 +59,7 @@ func (s *ConfigTestSuite) Test_LoadEVMConfig_SuccessfulLoad() {
 	os.Setenv("SPECTRE_OBSERVABILITY_LOG_LEVEL", "info")
 	os.Setenv("SPECTRE_OBSERVABILITY_LOG_FILE", "out2.log")
 	os.Setenv("SPECTRE_OBSERVABILITY_HEALTH_PORT", "9003")
+	os.Setenv("SPECTRE_STORE_PATH", "./custom_path")
 	os.Setenv("SPECTRE_PROVER_URL", "http://prover.com")
 	os.Setenv("SPECTRE_DOMAINS", "1:evm,2:evm")
 
@@ -73,6 +77,9 @@ func (s *ConfigTestSuite) Test_LoadEVMConfig_SuccessfulLoad() {
 		},
 		Prover: &config.Prover{
 			URL: "http://prover.com",
+		},
+		Store: &config.Store{
+			Path: "./custom_path",
 		},
 		Domains: domains,
 	})

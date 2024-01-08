@@ -10,6 +10,7 @@ const PREFIX = "SPECTRE"
 type Config struct {
 	Observability *Observability   `env_config:"observability"`
 	Prover        *Prover          `env_config:"prover"`
+	Store         *Store           `env_config:"store"`
 	Domains       map[uint8]string `required:"true"`
 }
 
@@ -21,6 +22,10 @@ type Observability struct {
 
 type Prover struct {
 	URL string `required:"true"`
+}
+
+type Store struct {
+	Path string `default:"./lvldbdata"`
 }
 
 // LoadConfig loads config from the environment and validates the fields

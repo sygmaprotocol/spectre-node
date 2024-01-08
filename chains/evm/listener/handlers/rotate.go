@@ -5,6 +5,7 @@ package handlers
 
 import (
 	"context"
+	"math/big"
 
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
@@ -19,32 +20,47 @@ type SyncCommitteeFetcher interface {
 	SyncCommittee(ctx context.Context, opts *api.SyncCommitteeOpts) (*api.Response[*apiv1.SyncCommittee], error)
 }
 
+type PeriodStorer interface {
+	Period(domainID uint8) (*big.Int, error)
+	StorePeriod(domainID uint8, period *big.Int) error
+}
+
 type RotateHandler struct {
 	domainID uint8
 	domains  []uint8
 	msgChan  chan []*message.Message
 
-	prover Prover
+	prover       Prover
+	periodStorer PeriodStorer
 
-	syncCommitteeFetcher SyncCommitteeFetcher
-	currentSyncCommittee *apiv1.SyncCommittee
+	committeePeriodLength uint64
 }
 
-func NewRotateHandler(msgChan chan []*message.Message, syncCommitteeFetcher SyncCommitteeFetcher, prover Prover, domainID uint8, domains []uint8) *RotateHandler {
+func NewRotateHandler(msgChan chan []*message.Message, periodStorer PeriodStorer, prover Prover, domainID uint8, domains []uint8, committeePeriodLenght uint64) *RotateHandler {
 	return &RotateHandler{
-		syncCommitteeFetcher: syncCommitteeFetcher,
-		prover:               prover,
-		domainID:             domainID,
-		domains:              domains,
-		msgChan:              msgChan,
-		currentSyncCommittee: &apiv1.SyncCommittee{},
+		prover:                prover,
+		periodStorer:          periodStorer,
+		domainID:              domainID,
+		domains:               domains,
+		msgChan:               msgChan,
+		committeePeriodLength: committeePeriodLenght,
 	}
 }
 
-// HandleEvents checks if there is a new sync committee and sends a rotate message
-// if there is
+// HandleEvents checks if the current period is newer than the last stored
+// period and rotates the committee if it is
 func (h *RotateHandler) HandleEvents(checkpoint *apiv1.Finality) error {
-	args, err := h.prover.RotateArgs(uint64(checkpoint.Finalized.Epoch))
+	latestPeriod, err := h.periodStorer.Period(h.domainID)
+	if err != nil {
+		return err
+	}
+	currentPeriod := uint64(checkpoint.Finalized.Epoch) / h.committeePeriodLength
+	if currentPeriod <= latestPeriod.Uint64() {
+		return nil
+	}
+
+	targetPeriod := latestPeriod.Add(latestPeriod, big.NewInt(1))
+	args, err := h.prover.RotateArgs(targetPeriod.Uint64())
 	if err != nil {
 		return err
 	}
@@ -61,17 +77,7 @@ func (h *RotateHandler) HandleEvents(checkpoint *apiv1.Finality) error {
 		Spec:   args.Spec,
 	}
 
-	syncCommittee, err := h.syncCommitteeFetcher.SyncCommittee(context.Background(), &api.SyncCommitteeOpts{
-		State: "finalized",
-	})
-	if err != nil {
-		return err
-	}
-	if syncCommittee.Data.String() == h.currentSyncCommittee.String() {
-		return nil
-	}
-
-	log.Info().Uint8("domainID", h.domainID).Msgf("Rotating committee")
+	log.Info().Uint8("domainID", h.domainID).Uint64("period", targetPeriod.Uint64()).Msgf("Rotating committee")
 
 	rotateProof, err := h.prover.RotateProof(args)
 	if err != nil {
@@ -98,5 +104,5 @@ func (h *RotateHandler) HandleEvents(checkpoint *apiv1.Finality) error {
 		}
 	}
 
-	return nil
+	return h.periodStorer.StorePeriod(h.domainID, targetPeriod)
 }
