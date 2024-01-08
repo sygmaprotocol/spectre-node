@@ -25,6 +25,7 @@ import (
 	evmMessage "github.com/sygmaprotocol/spectre-node/chains/evm/message"
 	"github.com/sygmaprotocol/spectre-node/chains/evm/prover"
 	"github.com/sygmaprotocol/spectre-node/config"
+	"github.com/sygmaprotocol/spectre-node/health"
 	"github.com/sygmaprotocol/sygma-core/chains/evm"
 	"github.com/sygmaprotocol/sygma-core/chains/evm/client"
 	"github.com/sygmaprotocol/sygma-core/chains/evm/transactor/gas"
@@ -50,6 +51,8 @@ func main() {
 	observability.ConfigureLogger(logLevel, os.Stdout)
 
 	log.Info().Msg("Loaded configuration")
+
+	go health.StartHealthEndpoint(cfg.Observability.HealthPort)
 
 	domains := make([]uint8, 0)
 	for domain := range cfg.Domains {
