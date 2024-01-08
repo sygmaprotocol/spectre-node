@@ -26,7 +26,7 @@ genmocks:
 	mockgen -source=./chains/evm/listener/listener.go -destination=./mock/listener.go -package mock
 	mockgen -source=./chains/evm/executor/executor.go -destination=./mock/executor.go -package mock
 	mockgen -source=./chains/evm/prover/prover.go -destination=./mock/prover.go -package mock
-
+	mockgen -destination=./mock/store.go -package mock github.com/ChainSafe/chainbridge-core/store KeyValueReaderWriter
 
 PLATFORMS := linux/amd64 darwin/amd64 darwin/arm64 linux/arm
 temp = $(subst /, ,$@)
