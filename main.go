@@ -21,7 +21,7 @@ import (
 	"github.com/sygmaprotocol/spectre-node/chains/evm/executor"
 	"github.com/sygmaprotocol/spectre-node/chains/evm/lightclient"
 	"github.com/sygmaprotocol/spectre-node/chains/evm/listener"
-	"github.com/sygmaprotocol/spectre-node/chains/evm/listener/events/handlers"
+	"github.com/sygmaprotocol/spectre-node/chains/evm/listener/handlers"
 	evmMessage "github.com/sygmaprotocol/spectre-node/chains/evm/message"
 	"github.com/sygmaprotocol/spectre-node/chains/evm/prover"
 	"github.com/sygmaprotocol/spectre-node/config"
@@ -112,9 +112,9 @@ func main() {
 				lightClient := lightclient.NewLightClient(config.BeaconEndpoint)
 				p := prover.NewProver(proverClient, beaconProvider, lightClient, prover.Spec(config.Spec))
 				routerAddress := common.HexToAddress(config.Router)
-				depositHandler := handlers.NewDepositEventHandler(msgChan, client, beaconProvider, p, routerAddress, id, domains, config.BlockInterval)
+				stepHandler := handlers.NewStepEventHandler(msgChan, client, beaconProvider, p, routerAddress, id, domains, config.BlockInterval)
 				rotateHandler := handlers.NewRotateHandler(msgChan, periodStore, p, id, domains, config.CommitteePeriodLength)
-				listener := listener.NewEVMListener(beaconProvider, []listener.EventHandler{rotateHandler, depositHandler}, id, time.Duration(config.RetryInterval)*time.Second)
+				listener := listener.NewEVMListener(beaconProvider, []listener.EventHandler{rotateHandler, stepHandler}, id, time.Duration(config.RetryInterval)*time.Second)
 
 				messageHandler := message.NewMessageHandler()
 				rotateMessageHandler := evmMessage.EvmRotateHandler{}

@@ -21,12 +21,12 @@ test:
 	./scripts/tests.sh
 
 genmocks:
-	mockgen -source=./chains/evm/listener/events/handlers/deposit.go -destination=./mock/deposit.go -package mock
-	mockgen -source=./chains/evm/listener/events/handlers/rotate.go -destination=./mock/rotate.go -package mock
+	mockgen -source=./chains/evm/listener/handlers/step.go -destination=./mock/step.go -package mock
+	mockgen -source=./chains/evm/listener/handlers/rotate.go -destination=./mock/rotate.go -package mock
 	mockgen -source=./chains/evm/listener/listener.go -destination=./mock/listener.go -package mock
 	mockgen -source=./chains/evm/executor/executor.go -destination=./mock/executor.go -package mock
 	mockgen -source=./chains/evm/prover/prover.go -destination=./mock/prover.go -package mock
-	mockgen -destination=./mock/store.go -package mock github.com/ChainSafe/chainbridge-core/store KeyValueReaderWriter
+	mockgen -destination=./mock/store.go -package mock github.com/sygmaprotocol/sygma-core/store KeyValueReaderWriter
 
 PLATFORMS := linux/amd64 darwin/amd64 darwin/arm64 linux/arm
 temp = $(subst /, ,$@)
