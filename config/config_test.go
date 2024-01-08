@@ -41,8 +41,9 @@ func (s *ConfigTestSuite) Test_LoadConfig_DefaultValues() {
 	s.Nil(err)
 	s.Equal(c, &config.Config{
 		Observability: &config.Observability{
-			LogLevel: "debug",
-			LogFile:  "out.log",
+			LogLevel:   "debug",
+			LogFile:    "out.log",
+			HealthPort: 9001,
 		},
 		Prover: &config.Prover{
 			URL: "http://prover.com",
@@ -54,6 +55,7 @@ func (s *ConfigTestSuite) Test_LoadConfig_DefaultValues() {
 func (s *ConfigTestSuite) Test_LoadEVMConfig_SuccessfulLoad() {
 	os.Setenv("SPECTRE_OBSERVABILITY_LOG_LEVEL", "info")
 	os.Setenv("SPECTRE_OBSERVABILITY_LOG_FILE", "out2.log")
+	os.Setenv("SPECTRE_OBSERVABILITY_HEALTH_PORT", "9003")
 	os.Setenv("SPECTRE_PROVER_URL", "http://prover.com")
 	os.Setenv("SPECTRE_DOMAINS", "1:evm,2:evm")
 
@@ -65,8 +67,9 @@ func (s *ConfigTestSuite) Test_LoadEVMConfig_SuccessfulLoad() {
 	s.Nil(err)
 	s.Equal(c, &config.Config{
 		Observability: &config.Observability{
-			LogLevel: "info",
-			LogFile:  "out2.log",
+			LogLevel:   "info",
+			LogFile:    "out2.log",
+			HealthPort: 9003,
 		},
 		Prover: &config.Prover{
 			URL: "http://prover.com",

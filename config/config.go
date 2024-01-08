@@ -14,8 +14,9 @@ type Config struct {
 }
 
 type Observability struct {
-	LogLevel string `default:"debug" split_words:"true"`
-	LogFile  string `default:"out.log" split_words:"true"`
+	LogLevel   string `default:"debug" split_words:"true"`
+	LogFile    string `default:"out.log" split_words:"true"`
+	HealthPort uint16 `default:"9001" split_words:"true"`
 }
 
 type Prover struct {
