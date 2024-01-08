@@ -21,11 +21,12 @@ import (
 	"github.com/sygmaprotocol/spectre-node/chains/evm/executor"
 	"github.com/sygmaprotocol/spectre-node/chains/evm/lightclient"
 	"github.com/sygmaprotocol/spectre-node/chains/evm/listener"
-	"github.com/sygmaprotocol/spectre-node/chains/evm/listener/events/handlers"
+	"github.com/sygmaprotocol/spectre-node/chains/evm/listener/handlers"
 	evmMessage "github.com/sygmaprotocol/spectre-node/chains/evm/message"
 	"github.com/sygmaprotocol/spectre-node/chains/evm/prover"
 	"github.com/sygmaprotocol/spectre-node/config"
 	"github.com/sygmaprotocol/spectre-node/health"
+	"github.com/sygmaprotocol/spectre-node/store"
 	"github.com/sygmaprotocol/sygma-core/chains/evm"
 	"github.com/sygmaprotocol/sygma-core/chains/evm/client"
 	"github.com/sygmaprotocol/sygma-core/chains/evm/transactor/gas"
@@ -35,6 +36,7 @@ import (
 	"github.com/sygmaprotocol/sygma-core/observability"
 	"github.com/sygmaprotocol/sygma-core/relayer"
 	"github.com/sygmaprotocol/sygma-core/relayer/message"
+	"github.com/sygmaprotocol/sygma-core/store/lvldb"
 	"github.com/ybbus/jsonrpc/v3"
 )
 
@@ -53,6 +55,12 @@ func main() {
 	log.Info().Msg("Loaded configuration")
 
 	go health.StartHealthEndpoint(cfg.Observability.HealthPort)
+
+	db, err := lvldb.NewLvlDB(cfg.Store.Path)
+	if err != nil {
+		panic(err)
+	}
+	periodStore := store.NewPeriodStore(db)
 
 	domains := make([]uint8, 0)
 	for domain := range cfg.Domains {
@@ -102,11 +110,11 @@ func main() {
 				beaconProvider := beaconClient.(*http.Service)
 
 				lightClient := lightclient.NewLightClient(config.BeaconEndpoint)
-				p := prover.NewProver(proverClient, beaconProvider, lightClient, prover.Spec(config.Spec), config.CommitteePeriodLength)
+				p := prover.NewProver(proverClient, beaconProvider, lightClient, prover.Spec(config.Spec))
 				routerAddress := common.HexToAddress(config.Router)
-				depositHandler := handlers.NewDepositEventHandler(msgChan, client, beaconProvider, p, routerAddress, id, domains, config.BlockInterval)
-				rotateHandler := handlers.NewRotateHandler(msgChan, beaconProvider, p, id, domains)
-				listener := listener.NewEVMListener(beaconProvider, []listener.EventHandler{rotateHandler, depositHandler}, id, time.Duration(config.RetryInterval)*time.Second)
+				stepHandler := handlers.NewStepEventHandler(msgChan, client, beaconProvider, p, routerAddress, id, domains, config.BlockInterval)
+				rotateHandler := handlers.NewRotateHandler(msgChan, periodStore, p, id, domains, config.CommitteePeriodLength)
+				listener := listener.NewEVMListener(beaconProvider, []listener.EventHandler{rotateHandler, stepHandler}, id, time.Duration(config.RetryInterval)*time.Second)
 
 				messageHandler := message.NewMessageHandler()
 				rotateMessageHandler := evmMessage.EvmRotateHandler{}

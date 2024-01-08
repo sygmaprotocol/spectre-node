@@ -36,7 +36,7 @@ type BlockFetcher interface {
 	SignedBeaconBlock(ctx context.Context, opts *api.SignedBeaconBlockOpts) (*api.Response[*spec.VersionedSignedBeaconBlock], error)
 }
 
-type DepositEventHandler struct {
+type StepEventHandler struct {
 	msgChan chan []*message.Message
 
 	eventFetcher EventFetcher
@@ -50,7 +50,7 @@ type DepositEventHandler struct {
 	routerAddress common.Address
 }
 
-func NewDepositEventHandler(
+func NewStepEventHandler(
 	msgChan chan []*message.Message,
 	eventFetcher EventFetcher,
 	blockFetcher BlockFetcher,
@@ -59,9 +59,9 @@ func NewDepositEventHandler(
 	domainID uint8,
 	domains []uint8,
 	blockInterval uint64,
-) *DepositEventHandler {
+) *StepEventHandler {
 	routerABI, _ := ethereumABI.JSON(strings.NewReader(abi.RouterABI))
-	return &DepositEventHandler{
+	return &StepEventHandler{
 		eventFetcher:  eventFetcher,
 		blockFetcher:  blockFetcher,
 		prover:        prover,
@@ -74,9 +74,8 @@ func NewDepositEventHandler(
 	}
 }
 
-// HandleEvents fetches deposit events and if deposits exists, submits a step message
-// to be executed on the destination network
-func (h *DepositEventHandler) HandleEvents(checkpoint *apiv1.Finality) error {
+// HandleEvents executes the step for the latest finality checkpoint
+func (h *StepEventHandler) HandleEvents(checkpoint *apiv1.Finality) error {
 	args, err := h.prover.StepArgs()
 	if err != nil {
 		return err
