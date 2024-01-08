@@ -48,29 +48,19 @@ func (s *RotateHandlerTestSuite) SetupTest() {
 	s.mockProver = mock.NewMockProver(ctrl)
 	s.mockPeriodStorer = mock.NewMockPeriodStorer(ctrl)
 	s.msgChan = make(chan []*message.Message, 2)
-	s.handler = handlers.NewRotateHandler(
+	s.mockPeriodStorer.EXPECT().Period(uint8(1)).Return(big.NewInt(2), nil)
+	s.handler, _ = handlers.NewRotateHandler(
 		s.msgChan,
 		s.mockPeriodStorer,
 		s.mockProver,
 		1,
 		[]uint8{2, 3},
 		256,
+		3,
 	)
 }
 
-func (s *RotateHandlerTestSuite) Test_HandleEvents_PeriodFetchingFails() {
-	s.mockPeriodStorer.EXPECT().Period(uint8(1)).Return(nil, fmt.Errorf("error"))
-
-	err := s.handler.HandleEvents(&apiv1.Finality{})
-	s.NotNil(err)
-
-	_, err = readFromChannel(s.msgChan)
-	s.NotNil(err)
-}
-
 func (s *RotateHandlerTestSuite) Test_HandleEvents_CurrentPeriodOlderThanLatest() {
-	s.mockPeriodStorer.EXPECT().Period(uint8(1)).Return(big.NewInt(2), nil)
-
 	err := s.handler.HandleEvents(&apiv1.Finality{
 		Finalized: &phase0.Checkpoint{
 			Epoch: phase0.Epoch(300),
@@ -83,9 +73,8 @@ func (s *RotateHandlerTestSuite) Test_HandleEvents_CurrentPeriodOlderThanLatest(
 }
 
 func (s *RotateHandlerTestSuite) Test_HandleEvents_ValidPeriod() {
-	s.mockPeriodStorer.EXPECT().Period(uint8(1)).Return(big.NewInt(2), nil)
-	s.mockPeriodStorer.EXPECT().StorePeriod(uint8(1), big.NewInt(3)).Return(nil)
-	s.mockProver.EXPECT().RotateArgs(uint64(3)).Return(&prover.RotateArgs{
+	s.mockPeriodStorer.EXPECT().StorePeriod(uint8(1), big.NewInt(4)).Return(nil)
+	s.mockProver.EXPECT().RotateArgs(uint64(4)).Return(&prover.RotateArgs{
 		Update:  &consensus.LightClientUpdateCapella{},
 		Domain:  phase0.Domain{},
 		Spec:    "mainnet",

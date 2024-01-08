@@ -22,6 +22,7 @@ type EVMConfig struct {
 	GasIncreasePercentage int64   `default:"15" split_words:"true"`
 	RetryInterval         uint64  `default:"12" split_words:"true"`
 	CommitteePeriodLength uint64  `default:"256" split_words:"true"`
+	StartingPeriod        uint64  `required:"true" split_words:"true"`
 }
 
 // LoadEVMConfig loads EVM config from the environment and validates the fields

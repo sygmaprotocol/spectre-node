@@ -32,11 +32,31 @@ type RotateHandler struct {
 
 	prover       Prover
 	periodStorer PeriodStorer
+	latestPeriod *big.Int
 
 	committeePeriodLength uint64
 }
 
-func NewRotateHandler(msgChan chan []*message.Message, periodStorer PeriodStorer, prover Prover, domainID uint8, domains []uint8, committeePeriodLenght uint64) *RotateHandler {
+func NewRotateHandler(
+	msgChan chan []*message.Message,
+	periodStorer PeriodStorer,
+	prover Prover,
+	domainID uint8,
+	domains []uint8,
+	committeePeriodLenght uint64,
+	startingPeriod uint64,
+) (*RotateHandler, error) {
+	storedPeriod, err := periodStorer.Period(domainID)
+	if err != nil {
+		return nil, err
+	}
+
+	var latestPeriod *big.Int
+	if storedPeriod.Uint64() >= startingPeriod {
+		latestPeriod = storedPeriod
+	} else {
+		latestPeriod = big.NewInt(int64(startingPeriod))
+	}
 	return &RotateHandler{
 		prover:                prover,
 		periodStorer:          periodStorer,
@@ -44,22 +64,19 @@ func NewRotateHandler(msgChan chan []*message.Message, periodStorer PeriodStorer
 		domains:               domains,
 		msgChan:               msgChan,
 		committeePeriodLength: committeePeriodLenght,
-	}
+		latestPeriod:          latestPeriod,
+	}, err
 }
 
 // HandleEvents checks if the current period is newer than the last stored
 // period and rotates the committee if it is
 func (h *RotateHandler) HandleEvents(checkpoint *apiv1.Finality) error {
-	latestPeriod, err := h.periodStorer.Period(h.domainID)
-	if err != nil {
-		return err
-	}
 	currentPeriod := uint64(checkpoint.Finalized.Epoch) / h.committeePeriodLength
-	if currentPeriod <= latestPeriod.Uint64() {
+	if currentPeriod <= h.latestPeriod.Uint64() {
 		return nil
 	}
 
-	targetPeriod := latestPeriod.Add(latestPeriod, big.NewInt(1))
+	targetPeriod := new(big.Int).Add(h.latestPeriod, big.NewInt(1))
 	args, err := h.prover.RotateArgs(targetPeriod.Uint64())
 	if err != nil {
 		return err
@@ -104,5 +121,6 @@ func (h *RotateHandler) HandleEvents(checkpoint *apiv1.Finality) error {
 		}
 	}
 
+	h.latestPeriod = targetPeriod
 	return h.periodStorer.StorePeriod(h.domainID, targetPeriod)
 }

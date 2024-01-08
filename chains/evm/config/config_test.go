@@ -42,6 +42,8 @@ func (s *EVMConfigTestSuite) Test_LoadEVMConfig_SuccessfulLoad_DefaultValues() {
 	os.Setenv("SPECTRE_DOMAINS_1_ROUTER", "router")
 	os.Setenv("SPECTRE_DOMAINS_1_BEACON_ENDPOINT", "endpoint")
 	os.Setenv("SPECTRE_DOMAINS_2_ROUTER", "invalid")
+	os.Setenv("SPECTRE_DOMAINS_1_STARTING_PERIOD", "500")
+	os.Setenv("SPECTRE_DOMAINS_2_STARTING_PERIOD", "500")
 
 	c, err := config.LoadEVMConfig(1)
 
@@ -61,6 +63,7 @@ func (s *EVMConfigTestSuite) Test_LoadEVMConfig_SuccessfulLoad_DefaultValues() {
 		RetryInterval:         12,
 		CommitteePeriodLength: 256,
 		BeaconEndpoint:        "endpoint",
+		StartingPeriod:        500,
 	})
 }
 
@@ -78,6 +81,7 @@ func (s *EVMConfigTestSuite) Test_LoadEVMConfig_SuccessfulLoad() {
 	os.Setenv("SPECTRE_DOMAINS_1_RETRY_INTERVAL", "30")
 	os.Setenv("SPECTRE_DOMAINS_1_COMMITTEE_PERIOD_LENGTH", "128")
 	os.Setenv("SPECTRE_DOMAINS_2_ROUTER", "invalid")
+	os.Setenv("SPECTRE_DOMAINS_1_STARTING_PERIOD", "500")
 
 	c, err := config.LoadEVMConfig(1)
 
@@ -97,5 +101,6 @@ func (s *EVMConfigTestSuite) Test_LoadEVMConfig_SuccessfulLoad() {
 		RetryInterval:         30,
 		CommitteePeriodLength: 128,
 		BeaconEndpoint:        "endpoint",
+		StartingPeriod:        500,
 	})
 }
