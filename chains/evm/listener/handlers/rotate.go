@@ -72,7 +72,7 @@ func NewRotateHandler(
 // period and rotates the committee if it is
 func (h *RotateHandler) HandleEvents(checkpoint *apiv1.Finality) error {
 	currentPeriod := uint64(checkpoint.Finalized.Epoch) / h.committeePeriodLength
-	if currentPeriod <= h.latestPeriod.Uint64() {
+	if currentPeriod < h.latestPeriod.Uint64() {
 		return nil
 	}
 
