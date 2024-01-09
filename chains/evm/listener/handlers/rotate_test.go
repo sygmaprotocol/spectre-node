@@ -63,7 +63,7 @@ func (s *RotateHandlerTestSuite) SetupTest() {
 func (s *RotateHandlerTestSuite) Test_HandleEvents_CurrentPeriodOlderThanLatest() {
 	err := s.handler.HandleEvents(&apiv1.Finality{
 		Finalized: &phase0.Checkpoint{
-			Epoch: phase0.Epoch(300),
+			Epoch: phase0.Epoch(765),
 		},
 	})
 	s.Nil(err)
@@ -91,7 +91,7 @@ func (s *RotateHandlerTestSuite) Test_HandleEvents_ValidPeriod() {
 
 	err := s.handler.HandleEvents(&apiv1.Finality{
 		Finalized: &phase0.Checkpoint{
-			Epoch: phase0.Epoch(1500),
+			Epoch: phase0.Epoch(768),
 		},
 	})
 	s.Nil(err)
