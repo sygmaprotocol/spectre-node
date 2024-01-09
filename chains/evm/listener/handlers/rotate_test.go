@@ -91,7 +91,7 @@ func (s *RotateHandlerTestSuite) Test_HandleEvents_ValidPeriod() {
 
 	err := s.handler.HandleEvents(&apiv1.Finality{
 		Finalized: &phase0.Checkpoint{
-			Epoch: phase0.Epoch(768),
+			Epoch: phase0.Epoch(1024),
 		},
 	})
 	s.Nil(err)

@@ -81,6 +81,8 @@ func (h *StepEventHandler) HandleEvents(checkpoint *apiv1.Finality) error {
 		return err
 	}
 
+	log.Info().Uint8("domainID", h.domainID).Uint64("slot", args.Update.FinalizedHeader.Header.Slot).Msgf("Executing sync step")
+
 	proof, err := h.prover.StepProof(args)
 	if err != nil {
 		return err
