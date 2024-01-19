@@ -42,44 +42,48 @@ func (s *ExecutorTestSuite) Test_Execute_InvalidPropType() {
 }
 
 func (s *ExecutorTestSuite) Test_Execute_Step_SubmissionFails() {
-	s.mockProofSubmitter.EXPECT().Step(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("error"))
+	s.mockProofSubmitter.EXPECT().Step(uint8(1), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("error"))
 
 	err := s.executor.Execute([]*proposal.Proposal{{
-		Data: message.StepData{},
-		Type: message.EVMStepProposal,
+		Data:   message.StepData{},
+		Type:   message.EVMStepProposal,
+		Source: 1,
 	}})
 
 	s.NotNil(err)
 }
 
 func (s *ExecutorTestSuite) Test_Execute_Step_Successful() {
-	s.mockProofSubmitter.EXPECT().Step(gomock.Any(), gomock.Any(), gomock.Any()).Return(&common.Hash{}, nil)
+	s.mockProofSubmitter.EXPECT().Step(uint8(1), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&common.Hash{}, nil)
 
 	err := s.executor.Execute([]*proposal.Proposal{{
-		Data: message.StepData{},
-		Type: message.EVMStepProposal,
+		Data:   message.StepData{},
+		Type:   message.EVMStepProposal,
+		Source: 1,
 	}})
 
 	s.Nil(err)
 }
 
 func (s *ExecutorTestSuite) Test_Execute_Rotate_SubmissionFails() {
-	s.mockProofSubmitter.EXPECT().Rotate(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("error"))
+	s.mockProofSubmitter.EXPECT().Rotate(uint8(1), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("error"))
 
 	err := s.executor.Execute([]*proposal.Proposal{{
-		Data: message.RotateData{},
-		Type: message.EVMRotateProposal,
+		Data:   message.RotateData{},
+		Type:   message.EVMRotateProposal,
+		Source: 1,
 	}})
 
 	s.NotNil(err)
 }
 
 func (s *ExecutorTestSuite) Test_Execute_Rotate_Successful() {
-	s.mockProofSubmitter.EXPECT().Rotate(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&common.Hash{}, nil)
+	s.mockProofSubmitter.EXPECT().Rotate(uint8(1), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&common.Hash{}, nil)
 
 	err := s.executor.Execute([]*proposal.Proposal{{
-		Data: message.RotateData{},
-		Type: message.EVMRotateProposal,
+		Data:   message.RotateData{},
+		Type:   message.EVMRotateProposal,
+		Source: 1,
 	}})
 
 	s.Nil(err)
