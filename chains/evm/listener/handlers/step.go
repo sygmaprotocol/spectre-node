@@ -21,6 +21,8 @@ import (
 	"github.com/sygmaprotocol/sygma-core/relayer/message"
 )
 
+const EXECUTION_STATE_ROOT_INDEX = 18
+
 type EventFetcher interface {
 	FetchEventLogs(ctx context.Context, contractAddress common.Address, event string, startBlock *big.Int, endBlock *big.Int) ([]types.Log, error)
 }
@@ -87,6 +89,16 @@ func (h *StepEventHandler) HandleEvents(checkpoint *apiv1.Finality) error {
 	if err != nil {
 		return err
 	}
+
+	node, err := args.Update.FinalizedHeader.Execution.GetTree()
+	if err != nil {
+		return err
+	}
+	stateRootProof, err := node.Prove(EXECUTION_STATE_ROOT_INDEX)
+	if err != nil {
+		return err
+	}
+
 	for _, destDomain := range h.domains {
 		if destDomain == h.domainID {
 			continue
@@ -98,8 +110,10 @@ func (h *StepEventHandler) HandleEvents(checkpoint *apiv1.Finality) error {
 				h.domainID,
 				destDomain,
 				evmMessage.StepData{
-					Proof: proof.Proof,
-					Args:  proof.Input,
+					Proof:          proof.Proof,
+					Args:           proof.Input,
+					StateRoot:      args.Update.FinalizedHeader.Execution.StateRoot,
+					StateRootProof: stateRootProof.Hashes,
 				},
 			),
 		}

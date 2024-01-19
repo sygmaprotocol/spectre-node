@@ -84,7 +84,6 @@ func (p *Prover) StepProof(args *StepArgs) (*EvmProof[message.SyncStepInput], er
 	if err != nil {
 		return nil, err
 	}
-
 	type stepArgs struct {
 		Spec    Spec     `json:"spec"`
 		Pubkeys []uint16 `json:"pubkeys"`
@@ -156,10 +155,6 @@ func (p *Prover) RotateProof(args *RotateArgs) (*EvmProof[message.RotateInput], 
 	log.Info().Msgf("Generated rotate proof")
 
 	comm, _ := new(big.Int).SetString(resp.Commitment[2:], 16)
-	if err != nil {
-		return nil, err
-	}
-
 	accumulator := [12]*big.Int{}
 	for i, value := range resp.Accumulator {
 		accumulator[i], _ = new(big.Int).SetString(value[2:], 16)

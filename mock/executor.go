@@ -41,31 +41,31 @@ func (m *MockProofSubmitter) EXPECT() *MockProofSubmitterMockRecorder {
 }
 
 // Rotate mocks base method.
-func (m *MockProofSubmitter) Rotate(rotateInput message.RotateInput, rotateProof []byte, stepInput message.SyncStepInput, stepProof []byte, opts transactor.TransactOptions) (*common.Hash, error) {
+func (m *MockProofSubmitter) Rotate(domainID uint8, rotateInput message.RotateInput, rotateProof []byte, stepInput message.SyncStepInput, stepProof []byte, opts transactor.TransactOptions) (*common.Hash, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Rotate", rotateInput, rotateProof, stepInput, stepProof, opts)
+	ret := m.ctrl.Call(m, "Rotate", domainID, rotateInput, rotateProof, stepInput, stepProof, opts)
 	ret0, _ := ret[0].(*common.Hash)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Rotate indicates an expected call of Rotate.
-func (mr *MockProofSubmitterMockRecorder) Rotate(rotateInput, rotateProof, stepInput, stepProof, opts any) *gomock.Call {
+func (mr *MockProofSubmitterMockRecorder) Rotate(domainID, rotateInput, rotateProof, stepInput, stepProof, opts any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Rotate", reflect.TypeOf((*MockProofSubmitter)(nil).Rotate), rotateInput, rotateProof, stepInput, stepProof, opts)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Rotate", reflect.TypeOf((*MockProofSubmitter)(nil).Rotate), domainID, rotateInput, rotateProof, stepInput, stepProof, opts)
 }
 
 // Step mocks base method.
-func (m *MockProofSubmitter) Step(input message.SyncStepInput, stepProof []byte, opts transactor.TransactOptions) (*common.Hash, error) {
+func (m *MockProofSubmitter) Step(domainID uint8, input message.SyncStepInput, stepProof []byte, stateRoot [32]byte, stateRootProof [][]byte, opts transactor.TransactOptions) (*common.Hash, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Step", input, stepProof, opts)
+	ret := m.ctrl.Call(m, "Step", domainID, input, stepProof, stateRoot, stateRootProof, opts)
 	ret0, _ := ret[0].(*common.Hash)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Step indicates an expected call of Step.
-func (mr *MockProofSubmitterMockRecorder) Step(input, stepProof, opts any) *gomock.Call {
+func (mr *MockProofSubmitterMockRecorder) Step(domainID, input, stepProof, stateRoot, stateRootProof, opts any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Step", reflect.TypeOf((*MockProofSubmitter)(nil).Step), input, stepProof, opts)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Step", reflect.TypeOf((*MockProofSubmitter)(nil).Step), domainID, input, stepProof, stateRoot, stateRootProof, opts)
 }

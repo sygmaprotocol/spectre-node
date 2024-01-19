@@ -26,8 +26,10 @@ type SyncStepInput struct {
 }
 
 type StepData struct {
-	Proof []byte
-	Args  SyncStepInput
+	Proof          []byte
+	Args           SyncStepInput
+	StateRoot      [32]byte
+	StateRootProof [][]byte
 }
 
 func NewEvmStepMessage(source uint8, destination uint8, stepData StepData) *message.Message {
