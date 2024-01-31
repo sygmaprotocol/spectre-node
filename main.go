@@ -56,9 +56,16 @@ func main() {
 
 	go health.StartHealthEndpoint(cfg.Observability.HealthPort)
 
-	db, err := lvldb.NewLvlDB(cfg.Store.Path)
-	if err != nil {
-		panic(err)
+	var db *lvldb.LVLDB
+	for {
+		db, err = lvldb.NewLvlDB(cfg.Store.Path)
+		if err != nil {
+			log.Error().Err(err).Msg("Unable to connect to blockstore file, retry in 10 seconds")
+			time.Sleep(10 * time.Second)
+		} else {
+			log.Info().Msg("Successfully connected to blockstore file")
+			break
+		}
 	}
 	periodStore := store.NewPeriodStore(db)
 
