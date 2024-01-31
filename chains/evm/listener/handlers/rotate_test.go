@@ -48,15 +48,14 @@ func (s *RotateHandlerTestSuite) SetupTest() {
 	s.mockProver = mock.NewMockProver(ctrl)
 	s.mockPeriodStorer = mock.NewMockPeriodStorer(ctrl)
 	s.msgChan = make(chan []*message.Message, 2)
-	s.mockPeriodStorer.EXPECT().Period(uint8(1)).Return(big.NewInt(2), nil)
-	s.handler, _ = handlers.NewRotateHandler(
+	s.handler = handlers.NewRotateHandler(
 		s.msgChan,
 		s.mockPeriodStorer,
 		s.mockProver,
 		1,
 		[]uint8{2, 3},
 		256,
-		3,
+		big.NewInt(3),
 	)
 }
 
