@@ -44,19 +44,8 @@ func NewRotateHandler(
 	domainID uint8,
 	domains []uint8,
 	committeePeriodLenght uint64,
-	startingPeriod uint64,
-) (*RotateHandler, error) {
-	storedPeriod, err := periodStorer.Period(domainID)
-	if err != nil {
-		return nil, err
-	}
-
-	var latestPeriod *big.Int
-	if storedPeriod.Uint64() >= startingPeriod {
-		latestPeriod = storedPeriod
-	} else {
-		latestPeriod = big.NewInt(int64(startingPeriod))
-	}
+	latestPeriod *big.Int,
+) *RotateHandler {
 	return &RotateHandler{
 		prover:                prover,
 		periodStorer:          periodStorer,
@@ -65,7 +54,7 @@ func NewRotateHandler(
 		msgChan:               msgChan,
 		committeePeriodLength: committeePeriodLenght,
 		latestPeriod:          latestPeriod,
-	}, err
+	}
 }
 
 // HandleEvents checks if the current period is newer than the last stored

@@ -64,6 +64,7 @@ func (s *EVMConfigTestSuite) Test_LoadEVMConfig_SuccessfulLoad_DefaultValues() {
 		CommitteePeriodLength: 256,
 		BeaconEndpoint:        "endpoint",
 		StartingPeriod:        500,
+		ForcePeriod:           false,
 	})
 }
 
@@ -82,6 +83,7 @@ func (s *EVMConfigTestSuite) Test_LoadEVMConfig_SuccessfulLoad() {
 	os.Setenv("SPECTRE_DOMAINS_1_COMMITTEE_PERIOD_LENGTH", "128")
 	os.Setenv("SPECTRE_DOMAINS_2_ROUTER", "invalid")
 	os.Setenv("SPECTRE_DOMAINS_1_STARTING_PERIOD", "500")
+	os.Setenv("SPECTRE_DOMAINS_1_FORCE_PERIOD", "true")
 
 	c, err := config.LoadEVMConfig(1)
 
@@ -102,5 +104,6 @@ func (s *EVMConfigTestSuite) Test_LoadEVMConfig_SuccessfulLoad() {
 		CommitteePeriodLength: 128,
 		BeaconEndpoint:        "endpoint",
 		StartingPeriod:        500,
+		ForcePeriod:           true,
 	})
 }

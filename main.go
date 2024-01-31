@@ -116,14 +116,22 @@ func main() {
 				}
 				beaconProvider := beaconClient.(*http.Service)
 
+				storedPeriod, err := periodStore.Period(id)
+				if err != nil {
+					panic(err)
+				}
+				var latestPeriod *big.Int
+				if (storedPeriod.Uint64() >= config.StartingPeriod) && !config.ForcePeriod {
+					latestPeriod = storedPeriod
+				} else {
+					latestPeriod = big.NewInt(int64(config.StartingPeriod))
+				}
+
 				lightClient := lightclient.NewLightClient(config.BeaconEndpoint)
 				p := prover.NewProver(proverClient, beaconProvider, lightClient, prover.Spec(config.Spec))
 				routerAddress := common.HexToAddress(config.Router)
 				stepHandler := handlers.NewStepEventHandler(msgChan, client, beaconProvider, p, routerAddress, id, domains, config.BlockInterval)
-				rotateHandler, err := handlers.NewRotateHandler(msgChan, periodStore, p, id, domains, config.CommitteePeriodLength, config.StartingPeriod)
-				if err != nil {
-					panic(err)
-				}
+				rotateHandler := handlers.NewRotateHandler(msgChan, periodStore, p, id, domains, config.CommitteePeriodLength, latestPeriod)
 				listener := listener.NewEVMListener(beaconProvider, []listener.EventHandler{rotateHandler, stepHandler}, id, time.Duration(config.RetryInterval)*time.Second)
 
 				messageHandler := message.NewMessageHandler()
