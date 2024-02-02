@@ -14,8 +14,22 @@ import (
 )
 
 type ProofSubmitter interface {
-	Step(input message.SyncStepInput, stepProof []byte, opts transactor.TransactOptions) (*common.Hash, error)
-	Rotate(rotateInput message.RotateInput, rotateProof []byte, stepInput message.SyncStepInput, stepProof []byte, opts transactor.TransactOptions) (*common.Hash, error)
+	Step(
+		domainID uint8,
+		input message.SyncStepInput,
+		stepProof []byte,
+		stateRoot [32]byte,
+		stateRootProof [][]byte,
+		opts transactor.TransactOptions,
+	) (*common.Hash, error)
+	Rotate(
+		domainID uint8,
+		rotateInput message.RotateInput,
+		rotateProof []byte,
+		stepInput message.SyncStepInput,
+		stepProof []byte,
+		opts transactor.TransactOptions,
+	) (*common.Hash, error)
 }
 
 type EVMExecutor struct {
@@ -35,17 +49,23 @@ func (e *EVMExecutor) Execute(props []*proposal.Proposal) error {
 	switch prop := props[0]; prop.Type {
 	case message.EVMRotateProposal:
 		rotateData := prop.Data.(message.RotateData)
-		return e.rotate(rotateData)
+		return e.rotate(prop.Source, rotateData)
 	case message.EVMStepProposal:
 		stepData := prop.Data.(message.StepData)
-		return e.step(stepData)
+		return e.step(prop.Source, stepData)
 	default:
 		return fmt.Errorf("no executor configured for prop type %s", prop.Type)
 	}
 }
 
-func (e *EVMExecutor) step(stepData message.StepData) error {
-	hash, err := e.proofSubmitter.Step(stepData.Args, stepData.Proof, transactor.TransactOptions{})
+func (e *EVMExecutor) step(domainID uint8, stepData message.StepData) error {
+	hash, err := e.proofSubmitter.Step(
+		domainID,
+		stepData.Args,
+		stepData.Proof,
+		stepData.StateRoot,
+		stepData.StateRootProof,
+		transactor.TransactOptions{})
 	if err != nil {
 		return err
 	}
@@ -54,8 +74,9 @@ func (e *EVMExecutor) step(stepData message.StepData) error {
 	return nil
 }
 
-func (e *EVMExecutor) rotate(rotateData message.RotateData) error {
+func (e *EVMExecutor) rotate(domainID uint8, rotateData message.RotateData) error {
 	hash, err := e.proofSubmitter.Rotate(
+		domainID,
 		rotateData.RotateInput,
 		rotateData.RotateProof,
 		rotateData.StepInput,
