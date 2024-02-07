@@ -90,6 +90,7 @@ func (h *StepEventHandler) HandleEvents(checkpoint *apiv1.Finality) error {
 		return err
 	}
 	if len(domains) == 0 {
+		h.latestBlock = latestBlock
 		log.Debug().Uint8("domainID", h.domainID).Uint64("slot", args.Update.FinalizedHeader.Header.Slot).Msgf("Skipping step...")
 		return nil
 	}
@@ -128,16 +129,11 @@ func (h *StepEventHandler) HandleEvents(checkpoint *apiv1.Finality) error {
 			),
 		}
 	}
-
 	h.latestBlock = latestBlock
 	return nil
 }
 
 func (h *StepEventHandler) destinationDomains(slot uint64) ([]uint8, uint64, error) {
-	if h.latestBlock == 0 {
-		return h.allDomains, 0, nil
-	}
-
 	domains := mapset.NewSet[uint8]()
 	block, err := h.blockFetcher.SignedBeaconBlock(context.Background(), &api.SignedBeaconBlockOpts{
 		Block: fmt.Sprint(slot),
@@ -147,19 +143,22 @@ func (h *StepEventHandler) destinationDomains(slot uint64) ([]uint8, uint64, err
 	}
 
 	endBlock := block.Data.Capella.Message.Body.ExecutionPayload.BlockNumber
-	startBlock := endBlock - h.latestBlock
-	deposits, err := h.fetchDeposits(big.NewInt(int64(startBlock)), big.NewInt(int64(endBlock)))
+	if h.latestBlock == 0 {
+		return h.allDomains, endBlock, nil
+	}
+
+	deposits, err := h.fetchDeposits(big.NewInt(int64(h.latestBlock)), big.NewInt(int64(endBlock)))
 	if err != nil {
 		return domains.ToSlice(), endBlock, err
 	}
 	if len(deposits) == 0 {
-		return domains.ToSlice(), endBlock, err
+		return domains.ToSlice(), endBlock, nil
 	}
 	for _, deposit := range deposits {
 		domains.Add(deposit.DestinationDomainID)
 	}
 
-	return domains.ToSlice(), endBlock, err
+	return domains.ToSlice(), endBlock, nil
 }
 
 func (h *StepEventHandler) fetchDeposits(startBlock *big.Int, endBlock *big.Int) ([]*events.Deposit, error) {
