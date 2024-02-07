@@ -130,7 +130,7 @@ func main() {
 				lightClient := lightclient.NewLightClient(config.BeaconEndpoint)
 				p := prover.NewProver(proverClient, beaconProvider, lightClient, prover.Spec(config.Spec))
 				routerAddress := common.HexToAddress(config.Router)
-				stepHandler := handlers.NewStepEventHandler(msgChan, client, beaconProvider, p, routerAddress, id, domains, config.BlockInterval)
+				stepHandler := handlers.NewStepEventHandler(msgChan, client, beaconProvider, p, routerAddress, id, domains)
 				rotateHandler := handlers.NewRotateHandler(msgChan, periodStore, p, id, domains, config.CommitteePeriodLength, latestPeriod)
 				listener := listener.NewEVMListener(beaconProvider, []listener.EventHandler{rotateHandler, stepHandler}, id, time.Duration(config.RetryInterval)*time.Second)
 
