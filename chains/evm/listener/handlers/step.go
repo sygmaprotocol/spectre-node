@@ -41,10 +41,6 @@ type BlockFetcher interface {
 	SignedBeaconBlock(ctx context.Context, opts *api.SignedBeaconBlockOpts) (*api.Response[*spec.VersionedSignedBeaconBlock], error)
 }
 
-type BlockStorer interface {
-	StoreBlock(block *big.Int, domainID uint8) error
-}
-
 type StepEventHandler struct {
 	msgChan chan []*message.Message
 
