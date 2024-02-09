@@ -21,7 +21,7 @@ import (
 	"github.com/sygmaprotocol/sygma-core/relayer/message"
 )
 
-const EXECUTION_STATE_ROOT_INDEX = 18
+const EXECUTION_STATE_ROOT_INDEX = 34
 
 type EventFetcher interface {
 	FetchEventLogs(ctx context.Context, contractAddress common.Address, event string, startBlock *big.Int, endBlock *big.Int) ([]types.Log, error)
