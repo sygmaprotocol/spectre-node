@@ -74,7 +74,7 @@ func (s *RotateHandlerTestSuite) Test_HandleEvents_CurrentPeriodOlderThanLatest(
 func (s *RotateHandlerTestSuite) Test_HandleEvents_ValidPeriod() {
 	s.mockPeriodStorer.EXPECT().StorePeriod(uint8(1), big.NewInt(4)).Return(nil)
 	s.mockProver.EXPECT().RotateArgs(uint64(4)).Return(&prover.RotateArgs{
-		Update:  &consensus.LightClientUpdateCapella{},
+		Update:  &consensus.LightClientUpdateDencun{},
 		Domain:  phase0.Domain{},
 		Spec:    "mainnet",
 		Pubkeys: [512][48]byte{},
