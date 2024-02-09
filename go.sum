@@ -328,8 +328,8 @@ github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcU
 github.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXlSw2iwfAo=
 github.com/supranational/blst v0.3.11 h1:LyU6FolezeWAhvQk0k6O/d49jqgO52MSDDfYgbeoEm4=
 github.com/supranational/blst v0.3.11/go.mod h1:jZJtfjgudtNl4en1tzwPIV3KjUnQUvG3/j+w+fVonLw=
-github.com/sygmaprotocol/go-eth-consensus v0.0.0-20240208160502-7f40b78e8b58 h1:MPJxl4bnvuzOnrihPhhTMK1jtF45dwfWm0vbEBX2WQk=
-github.com/sygmaprotocol/go-eth-consensus v0.0.0-20240208160502-7f40b78e8b58/go.mod h1:qaMaUGUsL5Twx/6TfG6BkJU3t6e8Pp9QUqFn7LvUOf8=
+github.com/sygmaprotocol/go-eth-consensus v0.0.0-20240209115220-99232c637bc3 h1:SQsyRz3yyUxPlrfTR0s9YCdicTuJ3gE0ZiVm4xfz71c=
+github.com/sygmaprotocol/go-eth-consensus v0.0.0-20240209115220-99232c637bc3/go.mod h1:qaMaUGUsL5Twx/6TfG6BkJU3t6e8Pp9QUqFn7LvUOf8=
 github.com/sygmaprotocol/sygma-core v0.0.0-20231023115554-62219e098d0d h1:S2129X3uNculIdDae6J88ekiPWfzpcYhnVAeEuNRLQg=
 github.com/sygmaprotocol/sygma-core v0.0.0-20231023115554-62219e098d0d/go.mod h1:b4RZCyYr20Mp4WAAj4TkC6gU2KZ0ZWcpSGmKc6n8NKc=
 github.com/syndtr/goleveldb v1.0.1-0.20220614013038-64ee5596c38a h1:1ur3QoCqvE5fl+nylMaIr9PVV1w343YRDtsy+Rwu7XI=

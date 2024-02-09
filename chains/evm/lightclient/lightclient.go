@@ -23,7 +23,7 @@ func NewLightClient(url string) *LightClient {
 }
 
 // Updates fetches light client updates for sync committee period
-func (c *LightClient) Updates(period uint64) ([]*consensus.LightClientUpdateDencun, error) {
+func (c *LightClient) Updates(period uint64) ([]*consensus.LightClientUpdateDeneb, error) {
 	resp, err := http.Get(fmt.Sprintf("%s/eth/v1/beacon/light_client/updates?start_period=%d&count=1", c.beaconURL, period))
 	if err != nil {
 		return nil, err
@@ -31,14 +31,14 @@ func (c *LightClient) Updates(period uint64) ([]*consensus.LightClientUpdateDenc
 	defer resp.Body.Close()
 
 	type response struct {
-		Data *consensus.LightClientUpdateDencun `json:"data"`
+		Data *consensus.LightClientUpdateDeneb `json:"data"`
 	}
 	apiResponse := make([]response, 0)
 	if err := c.decodeResp(resp, &apiResponse); err != nil {
 		return nil, err
 	}
 
-	updates := make([]*consensus.LightClientUpdateDencun, len(apiResponse))
+	updates := make([]*consensus.LightClientUpdateDeneb, len(apiResponse))
 	for i, update := range apiResponse {
 		updates[i] = update.Data
 	}
@@ -47,7 +47,7 @@ func (c *LightClient) Updates(period uint64) ([]*consensus.LightClientUpdateDenc
 }
 
 // FinalityUpdate returns the latest finalized light client update
-func (c *LightClient) FinalityUpdate() (*consensus.LightClientFinalityUpdateDencun, error) {
+func (c *LightClient) FinalityUpdate() (*consensus.LightClientFinalityUpdateDeneb, error) {
 	resp, err := http.Get(fmt.Sprintf("%s/eth/v1/beacon/light_client/finality_update", c.beaconURL))
 	if err != nil {
 		return nil, err
@@ -55,7 +55,7 @@ func (c *LightClient) FinalityUpdate() (*consensus.LightClientFinalityUpdateDenc
 	defer resp.Body.Close()
 
 	type response struct {
-		Data *consensus.LightClientFinalityUpdateDencun `json:"data,omitempty"`
+		Data *consensus.LightClientFinalityUpdateDeneb `json:"data,omitempty"`
 	}
 	var apiResponse response
 	if err := c.decodeResp(resp, &apiResponse); err != nil {
@@ -66,7 +66,7 @@ func (c *LightClient) FinalityUpdate() (*consensus.LightClientFinalityUpdateDenc
 }
 
 // Boostrap returns the latest light client bootstrap for the given block root
-func (c *LightClient) Bootstrap(blockRoot string) (*consensus.LightClientBootstrapDencun, error) {
+func (c *LightClient) Bootstrap(blockRoot string) (*consensus.LightClientBootstrapDeneb, error) {
 	resp, err := http.Get(fmt.Sprintf("%s/eth/v1/beacon/light_client/bootstrap/%s", c.beaconURL, blockRoot))
 	if err != nil {
 		return nil, err
@@ -74,7 +74,7 @@ func (c *LightClient) Bootstrap(blockRoot string) (*consensus.LightClientBootstr
 	defer resp.Body.Close()
 
 	type response struct {
-		Data *consensus.LightClientBootstrapDencun `json:"data,omitempty"`
+		Data *consensus.LightClientBootstrapDeneb `json:"data,omitempty"`
 	}
 	var apiResponse response
 	if err := c.decodeResp(resp, &apiResponse); err != nil {
