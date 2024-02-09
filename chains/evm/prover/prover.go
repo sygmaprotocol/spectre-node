@@ -20,12 +20,12 @@ type StepArgs struct {
 	Spec    Spec
 	Pubkeys [512][48]byte
 	Domain  phase0.Domain
-	Update  *consensus.LightClientFinalityUpdateCapella
+	Update  *consensus.LightClientFinalityUpdateDeneb
 }
 
 type RotateArgs struct {
 	Spec    Spec
-	Update  *consensus.LightClientUpdateCapella
+	Update  *consensus.LightClientUpdateDeneb
 	Pubkeys [512][48]byte
 	Domain  phase0.Domain
 }
@@ -42,9 +42,9 @@ type EvmProof[T any] struct {
 }
 
 type LightClient interface {
-	FinalityUpdate() (*consensus.LightClientFinalityUpdateCapella, error)
-	Updates(period uint64) ([]*consensus.LightClientUpdateCapella, error)
-	Bootstrap(blockRoot string) (*consensus.LightClientBootstrapCapella, error)
+	FinalityUpdate() (*consensus.LightClientFinalityUpdateDeneb, error)
+	Updates(period uint64) ([]*consensus.LightClientUpdateDeneb, error)
+	Bootstrap(blockRoot string) (*consensus.LightClientBootstrapDeneb, error)
 }
 
 type BeaconClient interface {

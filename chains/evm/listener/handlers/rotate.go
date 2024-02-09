@@ -72,7 +72,7 @@ func (h *RotateHandler) HandleEvents(checkpoint *apiv1.Finality) error {
 	}
 	sArgs := &prover.StepArgs{
 		Pubkeys: args.Pubkeys,
-		Update: &consensus.LightClientFinalityUpdateCapella{
+		Update: &consensus.LightClientFinalityUpdateDeneb{
 			AttestedHeader:  args.Update.AttestedHeader,
 			FinalizedHeader: args.Update.FinalizedHeader,
 			FinalityBranch:  args.Update.FinalityBranch,

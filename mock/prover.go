@@ -42,10 +42,10 @@ func (m *MockLightClient) EXPECT() *MockLightClientMockRecorder {
 }
 
 // Bootstrap mocks base method.
-func (m *MockLightClient) Bootstrap(blockRoot string) (*consensus.LightClientBootstrapCapella, error) {
+func (m *MockLightClient) Bootstrap(blockRoot string) (*consensus.LightClientBootstrapDeneb, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Bootstrap", blockRoot)
-	ret0, _ := ret[0].(*consensus.LightClientBootstrapCapella)
+	ret0, _ := ret[0].(*consensus.LightClientBootstrapDeneb)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -57,10 +57,10 @@ func (mr *MockLightClientMockRecorder) Bootstrap(blockRoot any) *gomock.Call {
 }
 
 // FinalityUpdate mocks base method.
-func (m *MockLightClient) FinalityUpdate() (*consensus.LightClientFinalityUpdateCapella, error) {
+func (m *MockLightClient) FinalityUpdate() (*consensus.LightClientFinalityUpdateDeneb, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FinalityUpdate")
-	ret0, _ := ret[0].(*consensus.LightClientFinalityUpdateCapella)
+	ret0, _ := ret[0].(*consensus.LightClientFinalityUpdateDeneb)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -72,10 +72,10 @@ func (mr *MockLightClientMockRecorder) FinalityUpdate() *gomock.Call {
 }
 
 // Updates mocks base method.
-func (m *MockLightClient) Updates(period uint64) ([]*consensus.LightClientUpdateCapella, error) {
+func (m *MockLightClient) Updates(period uint64) ([]*consensus.LightClientUpdateDeneb, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Updates", period)
-	ret0, _ := ret[0].([]*consensus.LightClientUpdateCapella)
+	ret0, _ := ret[0].([]*consensus.LightClientUpdateDeneb)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
