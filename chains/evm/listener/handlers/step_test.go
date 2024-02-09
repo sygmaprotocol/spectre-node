@@ -83,8 +83,8 @@ func (s *StepHandlerTestSuite) Test_HandleEvents_FetchingArgsFails() {
 
 func (s *StepHandlerTestSuite) Test_HandleEvents_FetchingLogsFails() {
 	s.mockStepProver.EXPECT().StepArgs().Return(&prover.StepArgs{
-		Update: &consensus.LightClientFinalityUpdateCapella{
-			FinalizedHeader: &consensus.LightClientHeaderCapella{
+		Update: &consensus.LightClientFinalityUpdateDeneb{
+			FinalizedHeader: &consensus.LightClientHeaderDeneb{
 				Header: &consensus.BeaconBlockHeader{
 					Slot: 10,
 				},
@@ -108,12 +108,12 @@ func (s *StepHandlerTestSuite) Test_HandleEvents_FetchingLogsFails() {
 
 func (s *StepHandlerTestSuite) Test_HandleEvents_FirstStep_StepExecuted() {
 	s.mockStepProver.EXPECT().StepArgs().Return(&prover.StepArgs{
-		Update: &consensus.LightClientFinalityUpdateCapella{
-			FinalizedHeader: &consensus.LightClientHeaderCapella{
+		Update: &consensus.LightClientFinalityUpdateDeneb{
+			FinalizedHeader: &consensus.LightClientHeaderDeneb{
 				Header: &consensus.BeaconBlockHeader{
 					Slot: 10,
 				},
-				Execution: &consensus.ExecutionPayloadHeaderCapella{},
+				Execution: &consensus.ExecutionPayloadHeaderDeneb{},
 			},
 		},
 	}, nil)
@@ -153,12 +153,12 @@ func (s *StepHandlerTestSuite) Test_HandleEvents_FirstStep_StepExecuted() {
 
 func (s *StepHandlerTestSuite) Test_HandleEvents_SecondStep_MissingDeposits() {
 	s.mockStepProver.EXPECT().StepArgs().Return(&prover.StepArgs{
-		Update: &consensus.LightClientFinalityUpdateCapella{
-			FinalizedHeader: &consensus.LightClientHeaderCapella{
+		Update: &consensus.LightClientFinalityUpdateDeneb{
+			FinalizedHeader: &consensus.LightClientHeaderDeneb{
 				Header: &consensus.BeaconBlockHeader{
 					Slot: 10,
 				},
-				Execution: &consensus.ExecutionPayloadHeaderCapella{},
+				Execution: &consensus.ExecutionPayloadHeaderDeneb{},
 			},
 		},
 	}, nil)
@@ -190,12 +190,12 @@ func (s *StepHandlerTestSuite) Test_HandleEvents_SecondStep_MissingDeposits() {
 	s.Nil(err)
 
 	s.mockStepProver.EXPECT().StepArgs().Return(&prover.StepArgs{
-		Update: &consensus.LightClientFinalityUpdateCapella{
-			FinalizedHeader: &consensus.LightClientHeaderCapella{
+		Update: &consensus.LightClientFinalityUpdateDeneb{
+			FinalizedHeader: &consensus.LightClientHeaderDeneb{
 				Header: &consensus.BeaconBlockHeader{
 					Slot: 10,
 				},
-				Execution: &consensus.ExecutionPayloadHeaderCapella{},
+				Execution: &consensus.ExecutionPayloadHeaderDeneb{},
 			},
 		},
 	}, nil)
@@ -229,12 +229,12 @@ func (s *StepHandlerTestSuite) Test_HandleEvents_SecondStep_MissingDeposits() {
 
 func (s *StepHandlerTestSuite) Test_HandleEvents_SecondStep_ValidDeposits() {
 	s.mockStepProver.EXPECT().StepArgs().Return(&prover.StepArgs{
-		Update: &consensus.LightClientFinalityUpdateCapella{
-			FinalizedHeader: &consensus.LightClientHeaderCapella{
+		Update: &consensus.LightClientFinalityUpdateDeneb{
+			FinalizedHeader: &consensus.LightClientHeaderDeneb{
 				Header: &consensus.BeaconBlockHeader{
 					Slot: 10,
 				},
-				Execution: &consensus.ExecutionPayloadHeaderCapella{},
+				Execution: &consensus.ExecutionPayloadHeaderDeneb{},
 			},
 		},
 	}, nil)
@@ -266,12 +266,12 @@ func (s *StepHandlerTestSuite) Test_HandleEvents_SecondStep_ValidDeposits() {
 	s.Nil(err)
 
 	s.mockStepProver.EXPECT().StepArgs().Return(&prover.StepArgs{
-		Update: &consensus.LightClientFinalityUpdateCapella{
-			FinalizedHeader: &consensus.LightClientHeaderCapella{
+		Update: &consensus.LightClientFinalityUpdateDeneb{
+			FinalizedHeader: &consensus.LightClientHeaderDeneb{
 				Header: &consensus.BeaconBlockHeader{
 					Slot: 10,
 				},
-				Execution: &consensus.ExecutionPayloadHeaderCapella{},
+				Execution: &consensus.ExecutionPayloadHeaderDeneb{},
 			},
 		},
 	}, nil)
