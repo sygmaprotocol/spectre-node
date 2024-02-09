@@ -142,7 +142,7 @@ func (h *StepEventHandler) destinationDomains(slot uint64) ([]uint8, uint64, err
 		return domains.ToSlice(), 0, err
 	}
 
-	endBlock := block.Data.Capella.Message.Body.ExecutionPayload.BlockNumber
+	endBlock := block.Data.Deneb.Message.Body.ExecutionPayload.BlockNumber
 	if h.latestBlock == 0 {
 		return h.allDomains, endBlock, nil
 	}

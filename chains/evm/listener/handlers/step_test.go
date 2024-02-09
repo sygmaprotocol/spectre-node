@@ -13,7 +13,7 @@ import (
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
-	"github.com/attestantio/go-eth2-client/spec/capella"
+	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -121,10 +121,10 @@ func (s *StepHandlerTestSuite) Test_HandleEvents_FirstStep_StepExecuted() {
 		Block: "10",
 	}).Return(&api.Response[*spec.VersionedSignedBeaconBlock]{
 		Data: &spec.VersionedSignedBeaconBlock{
-			Capella: &capella.SignedBeaconBlock{
-				Message: &capella.BeaconBlock{
-					Body: &capella.BeaconBlockBody{
-						ExecutionPayload: &capella.ExecutionPayload{
+			Deneb: &deneb.SignedBeaconBlock{
+				Message: &deneb.BeaconBlock{
+					Body: &deneb.BeaconBlockBody{
+						ExecutionPayload: &deneb.ExecutionPayload{
 							BlockNumber: 100,
 						},
 					},
@@ -166,10 +166,10 @@ func (s *StepHandlerTestSuite) Test_HandleEvents_SecondStep_MissingDeposits() {
 		Block: "10",
 	}).Return(&api.Response[*spec.VersionedSignedBeaconBlock]{
 		Data: &spec.VersionedSignedBeaconBlock{
-			Capella: &capella.SignedBeaconBlock{
-				Message: &capella.BeaconBlock{
-					Body: &capella.BeaconBlockBody{
-						ExecutionPayload: &capella.ExecutionPayload{
+			Deneb: &deneb.SignedBeaconBlock{
+				Message: &deneb.BeaconBlock{
+					Body: &deneb.BeaconBlockBody{
+						ExecutionPayload: &deneb.ExecutionPayload{
 							BlockNumber: 100,
 						},
 					},
@@ -203,10 +203,10 @@ func (s *StepHandlerTestSuite) Test_HandleEvents_SecondStep_MissingDeposits() {
 		Block: "10",
 	}).Return(&api.Response[*spec.VersionedSignedBeaconBlock]{
 		Data: &spec.VersionedSignedBeaconBlock{
-			Capella: &capella.SignedBeaconBlock{
-				Message: &capella.BeaconBlock{
-					Body: &capella.BeaconBlockBody{
-						ExecutionPayload: &capella.ExecutionPayload{
+			Deneb: &deneb.SignedBeaconBlock{
+				Message: &deneb.BeaconBlock{
+					Body: &deneb.BeaconBlockBody{
+						ExecutionPayload: &deneb.ExecutionPayload{
 							BlockNumber: 110,
 						},
 					},
@@ -242,10 +242,10 @@ func (s *StepHandlerTestSuite) Test_HandleEvents_SecondStep_ValidDeposits() {
 		Block: "10",
 	}).Return(&api.Response[*spec.VersionedSignedBeaconBlock]{
 		Data: &spec.VersionedSignedBeaconBlock{
-			Capella: &capella.SignedBeaconBlock{
-				Message: &capella.BeaconBlock{
-					Body: &capella.BeaconBlockBody{
-						ExecutionPayload: &capella.ExecutionPayload{
+			Deneb: &deneb.SignedBeaconBlock{
+				Message: &deneb.BeaconBlock{
+					Body: &deneb.BeaconBlockBody{
+						ExecutionPayload: &deneb.ExecutionPayload{
 							BlockNumber: 100,
 						},
 					},
@@ -279,10 +279,10 @@ func (s *StepHandlerTestSuite) Test_HandleEvents_SecondStep_ValidDeposits() {
 		Block: "10",
 	}).Return(&api.Response[*spec.VersionedSignedBeaconBlock]{
 		Data: &spec.VersionedSignedBeaconBlock{
-			Capella: &capella.SignedBeaconBlock{
-				Message: &capella.BeaconBlock{
-					Body: &capella.BeaconBlockBody{
-						ExecutionPayload: &capella.ExecutionPayload{
+			Deneb: &deneb.SignedBeaconBlock{
+				Message: &deneb.BeaconBlock{
+					Body: &deneb.BeaconBlockBody{
+						ExecutionPayload: &deneb.ExecutionPayload{
 							BlockNumber: 110,
 						},
 					},
