@@ -46,7 +46,6 @@ func (c *Spectre) Step(
 
 func (c *Spectre) Rotate(
 	domainID uint8,
-	rotateInput message.RotateInput,
 	rotateProof []byte,
 	stepInput message.SyncStepInput,
 	stepProof []byte,
@@ -55,6 +54,6 @@ func (c *Spectre) Rotate(
 	return c.ExecuteTransaction(
 		"rotate",
 		opts,
-		domainID, rotateInput, rotateProof, stepInput, stepProof,
+		domainID, rotateProof, stepInput, stepProof,
 	)
 }

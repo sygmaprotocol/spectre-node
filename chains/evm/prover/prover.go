@@ -6,7 +6,6 @@ package prover
 import (
 	"context"
 	"fmt"
-	"math/big"
 
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -31,9 +30,8 @@ type RotateArgs struct {
 }
 
 type ProverResponse struct {
-	Accumulator [12]string `json:"accumulator"`
-	Proof       []uint16   `json:"proof"`
-	Commitment  string     `json:"committee_poseidon"`
+	Proof      []uint16 `json:"proof"`
+	Commitment string   `json:"committee_poseidon"`
 }
 
 type EvmProof[T any] struct {
@@ -101,11 +99,6 @@ func (p *Prover) StepProof(args *StepArgs) (*EvmProof[message.SyncStepInput], er
 		return nil, err
 	}
 
-	accumulator := [12]*big.Int{}
-	for i, value := range resp.Accumulator {
-		accumulator[i], _ = new(big.Int).SetString(value[2:], 16)
-	}
-
 	log.Info().Msgf("Generated step proof")
 
 	finalizedHeaderRoot, err := args.Update.FinalizedHeader.Header.HashTreeRoot()
@@ -124,19 +117,14 @@ func (p *Prover) StepProof(args *StepArgs) (*EvmProof[message.SyncStepInput], er
 			Participation:        uint64(CountSetBits(args.Update.SyncAggregate.SyncCommiteeBits)),
 			FinalizedHeaderRoot:  finalizedHeaderRoot,
 			ExecutionPayloadRoot: executionRoot,
-			Accumulator:          accumulator,
 		},
 	}
 	return proof, nil
 }
 
 // RotateProof generates the proof for the sync committee rotation for the period
-func (p *Prover) RotateProof(args *RotateArgs) (*EvmProof[message.RotateInput], error) {
+func (p *Prover) RotateProof(args *RotateArgs) (*EvmProof[struct{}], error) {
 	args.Update.AttestedHeader = args.Update.FinalizedHeader
-	syncCommiteeRoot, err := p.pubkeysRoot(args.Update.NextSyncCommittee.PubKeys)
-	if err != nil {
-		return nil, err
-	}
 	updateSzz, err := args.Update.MarshalSSZ()
 	if err != nil {
 		return nil, err
@@ -147,6 +135,7 @@ func (p *Prover) RotateProof(args *RotateArgs) (*EvmProof[message.RotateInput], 
 		Spec   Spec     `json:"spec"`
 	}
 	var resp ProverResponse
+
 	err = p.proverClient.CallFor(context.Background(), &resp, "genEvmProof_CommitteeUpdateCompressed", rotateArgs{Update: ByteArrayToU16Array(updateSzz), Spec: args.Spec})
 	if err != nil {
 		return nil, err
@@ -154,19 +143,9 @@ func (p *Prover) RotateProof(args *RotateArgs) (*EvmProof[message.RotateInput], 
 
 	log.Info().Msgf("Generated rotate proof")
 
-	comm, _ := new(big.Int).SetString(resp.Commitment[2:], 16)
-	accumulator := [12]*big.Int{}
-	for i, value := range resp.Accumulator {
-		accumulator[i], _ = new(big.Int).SetString(value[2:], 16)
-	}
-
-	proof := &EvmProof[message.RotateInput]{
+	proof := &EvmProof[struct{}]{
 		Proof: U16ArrayToByteArray(resp.Proof),
-		Input: message.RotateInput{
-			SyncCommitteeSSZ:      syncCommiteeRoot,
-			SyncCommitteePoseidon: comm,
-			Accumulator:           accumulator,
-		},
+		Input: struct{}{},
 	}
 	return proof, nil
 }

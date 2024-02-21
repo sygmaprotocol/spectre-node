@@ -24,7 +24,6 @@ type ProofSubmitter interface {
 	) (*common.Hash, error)
 	Rotate(
 		domainID uint8,
-		rotateInput message.RotateInput,
 		rotateProof []byte,
 		stepInput message.SyncStepInput,
 		stepProof []byte,
@@ -67,6 +66,7 @@ func (e *EVMExecutor) step(domainID uint8, stepData message.StepData) error {
 		stepData.StateRootProof,
 		transactor.TransactOptions{})
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 
@@ -77,7 +77,6 @@ func (e *EVMExecutor) step(domainID uint8, stepData message.StepData) error {
 func (e *EVMExecutor) rotate(domainID uint8, rotateData message.RotateData) error {
 	hash, err := e.proofSubmitter.Rotate(
 		domainID,
-		rotateData.RotateInput,
 		rotateData.RotateProof,
 		rotateData.StepInput,
 		rotateData.StepProof,

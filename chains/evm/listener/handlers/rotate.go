@@ -102,7 +102,6 @@ func (h *RotateHandler) HandleEvents(checkpoint *apiv1.Finality) error {
 		log.Debug().Uint8("domainID", h.domainID).Msgf("Sending rotate message to domain %d", domain)
 		h.msgChan <- []*message.Message{
 			evmMessage.NewEvmRotateMessage(h.domainID, domain, evmMessage.RotateData{
-				RotateInput: rotateProof.Input,
 				RotateProof: rotateProof.Proof,
 				StepProof:   stepProof.Proof,
 				StepInput:   stepProof.Input,
