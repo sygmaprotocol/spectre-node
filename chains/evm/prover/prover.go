@@ -9,7 +9,6 @@ import (
 
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	ssz "github.com/ferranbt/fastssz"
 	"github.com/rs/zerolog/log"
 	"github.com/sygmaprotocol/spectre-node/chains/evm/message"
 	consensus "github.com/umbracle/go-eth-consensus"
@@ -225,14 +224,4 @@ func (p *Prover) pubkeysSSZ(pubkeys [512][48]byte) []byte {
 		pubkeysSSZ = append(pubkeysSSZ, pubkeys[:]...)
 	}
 	return pubkeysSSZ
-}
-
-func (p *Prover) pubkeysRoot(pubkeys [512][48]byte) ([32]byte, error) {
-	h := ssz.NewHasher()
-	subIndx := h.Index()
-	for _, key := range pubkeys {
-		h.PutBytes(key[:])
-	}
-	h.Merkleize(subIndx)
-	return h.HashRoot()
 }
