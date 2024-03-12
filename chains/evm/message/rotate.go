@@ -4,8 +4,6 @@
 package message
 
 import (
-	"math/big"
-
 	"github.com/rs/zerolog/log"
 	"github.com/sygmaprotocol/sygma-core/relayer/message"
 	"github.com/sygmaprotocol/sygma-core/relayer/proposal"
@@ -16,15 +14,8 @@ const (
 	EVMRotateProposal proposal.ProposalType = "EVMRotateProposal"
 )
 
-type RotateInput struct {
-	SyncCommitteeSSZ      [32]byte
-	SyncCommitteePoseidon *big.Int
-	Accumulator           [12]*big.Int
-}
-
 type RotateData struct {
 	RotateProof []byte
-	RotateInput RotateInput
 	StepProof   []byte
 	StepInput   SyncStepInput
 }

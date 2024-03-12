@@ -99,10 +99,10 @@ func (mr *MockProverMockRecorder) RotateArgs(epoch any) *gomock.Call {
 }
 
 // RotateProof mocks base method.
-func (m *MockProver) RotateProof(args *prover.RotateArgs) (*prover.EvmProof[message.RotateInput], error) {
+func (m *MockProver) RotateProof(args *prover.RotateArgs) (*prover.EvmProof[struct{}], error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RotateProof", args)
-	ret0, _ := ret[0].(*prover.EvmProof[message.RotateInput])
+	ret0, _ := ret[0].(*prover.EvmProof[struct{}])
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

@@ -66,7 +66,7 @@ func (s *ExecutorTestSuite) Test_Execute_Step_Successful() {
 }
 
 func (s *ExecutorTestSuite) Test_Execute_Rotate_SubmissionFails() {
-	s.mockProofSubmitter.EXPECT().Rotate(uint8(1), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("error"))
+	s.mockProofSubmitter.EXPECT().Rotate(uint8(1), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("error"))
 
 	err := s.executor.Execute([]*proposal.Proposal{{
 		Data:   message.RotateData{},
@@ -78,7 +78,7 @@ func (s *ExecutorTestSuite) Test_Execute_Rotate_SubmissionFails() {
 }
 
 func (s *ExecutorTestSuite) Test_Execute_Rotate_Successful() {
-	s.mockProofSubmitter.EXPECT().Rotate(uint8(1), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&common.Hash{}, nil)
+	s.mockProofSubmitter.EXPECT().Rotate(uint8(1), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&common.Hash{}, nil)
 
 	err := s.executor.Execute([]*proposal.Proposal{{
 		Data:   message.RotateData{},

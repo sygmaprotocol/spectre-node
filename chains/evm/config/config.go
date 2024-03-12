@@ -23,6 +23,7 @@ type EVMConfig struct {
 	CommitteePeriodLength uint64  `default:"256" split_words:"true"`
 	StartingPeriod        uint64  `required:"true" split_words:"true"`
 	ForcePeriod           bool    `default:"false" split_words:"true"`
+	FinalityThreshold     uint64  `default:"342" split_words:"true"`
 }
 
 // LoadEVMConfig loads EVM config from the environment and validates the fields

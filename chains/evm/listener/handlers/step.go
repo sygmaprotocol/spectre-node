@@ -32,7 +32,7 @@ type EventFetcher interface {
 
 type Prover interface {
 	StepProof(args *prover.StepArgs) (*prover.EvmProof[evmMessage.SyncStepInput], error)
-	RotateProof(args *prover.RotateArgs) (*prover.EvmProof[evmMessage.RotateInput], error)
+	RotateProof(args *prover.RotateArgs) (*prover.EvmProof[struct{}], error)
 	StepArgs() (*prover.StepArgs, error)
 	RotateArgs(epoch uint64) (*prover.RotateArgs, error)
 }
