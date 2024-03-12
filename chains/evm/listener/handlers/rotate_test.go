@@ -79,9 +79,9 @@ func (s *RotateHandlerTestSuite) Test_HandleEvents_ValidPeriod() {
 		Spec:    "mainnet",
 		Pubkeys: [512][48]byte{},
 	}, nil)
-	s.mockProver.EXPECT().RotateProof(gomock.Any()).Return(&prover.EvmProof[evmMessage.RotateInput]{
+	s.mockProver.EXPECT().RotateProof(gomock.Any()).Return(&prover.EvmProof[struct{}]{
 		Proof: []byte{},
-		Input: evmMessage.RotateInput{},
+		Input: struct{}{},
 	}, nil)
 	s.mockProver.EXPECT().StepProof(gomock.Any()).Return(&prover.EvmProof[evmMessage.SyncStepInput]{
 		Proof: []byte{},

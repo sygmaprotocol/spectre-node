@@ -66,7 +66,6 @@ func (e *EVMExecutor) step(domainID uint8, stepData message.StepData) error {
 		stepData.StateRootProof,
 		transactor.TransactOptions{})
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 
