@@ -58,7 +58,8 @@ type Prover struct {
 	beaconClient BeaconClient
 	proverClient ProverClient
 
-	spec Spec
+	spec              Spec
+	finalityThreshold uint64
 }
 
 func NewProver(
@@ -66,17 +67,23 @@ func NewProver(
 	beaconClient BeaconClient,
 	lightClient LightClient,
 	spec Spec,
+	finalityTreshold uint64,
 ) *Prover {
 	return &Prover{
-		proverClient: proverClient,
-		spec:         spec,
-		beaconClient: beaconClient,
-		lightClient:  lightClient,
+		proverClient:      proverClient,
+		spec:              spec,
+		beaconClient:      beaconClient,
+		lightClient:       lightClient,
+		finalityThreshold: finalityTreshold,
 	}
 }
 
 // StepProof generates the proof for the sync step
 func (p *Prover) StepProof(args *StepArgs) (*EvmProof[message.SyncStepInput], error) {
+	participation := uint64(CountSetBits(args.Update.SyncAggregate.SyncCommiteeBits))
+	if participation < p.finalityThreshold {
+		return nil, fmt.Errorf("participation %d lower than finality treshold %d", participation, p.finalityThreshold)
+	}
 	updateSzz, err := args.Update.MarshalSSZ()
 	if err != nil {
 		return nil, err
@@ -113,7 +120,7 @@ func (p *Prover) StepProof(args *StepArgs) (*EvmProof[message.SyncStepInput], er
 		Input: message.SyncStepInput{
 			AttestedSlot:         args.Update.AttestedHeader.Header.Slot,
 			FinalizedSlot:        args.Update.FinalizedHeader.Header.Slot,
-			Participation:        uint64(CountSetBits(args.Update.SyncAggregate.SyncCommiteeBits)),
+			Participation:        participation,
 			FinalizedHeaderRoot:  finalizedHeaderRoot,
 			ExecutionPayloadRoot: executionRoot,
 		},
@@ -154,6 +161,7 @@ func (p *Prover) StepArgs() (*StepArgs, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	blockRoot, err := p.beaconClient.BeaconBlockRoot(context.Background(), &api.BeaconBlockRootOpts{
 		Block: fmt.Sprint(update.FinalizedHeader.Header.Slot),
 	})

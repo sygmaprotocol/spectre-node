@@ -64,6 +64,7 @@ func (s *EVMConfigTestSuite) Test_LoadEVMConfig_SuccessfulLoad_DefaultValues() {
 		BeaconEndpoint:        "endpoint",
 		StartingPeriod:        500,
 		ForcePeriod:           false,
+		FinalityThreshold:     342,
 	})
 }
 
@@ -83,6 +84,7 @@ func (s *EVMConfigTestSuite) Test_LoadEVMConfig_SuccessfulLoad() {
 	os.Setenv("SPECTRE_DOMAINS_2_ROUTER", "invalid")
 	os.Setenv("SPECTRE_DOMAINS_1_STARTING_PERIOD", "500")
 	os.Setenv("SPECTRE_DOMAINS_1_FORCE_PERIOD", "true")
+	os.Setenv("SPECTRE_DOMAINS_1_FINALITY_THRESHOLD", "382")
 
 	c, err := config.LoadEVMConfig(1)
 
@@ -103,5 +105,6 @@ func (s *EVMConfigTestSuite) Test_LoadEVMConfig_SuccessfulLoad() {
 		BeaconEndpoint:        "endpoint",
 		StartingPeriod:        500,
 		ForcePeriod:           true,
+		FinalityThreshold:     382,
 	})
 }
