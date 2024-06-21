@@ -6,7 +6,6 @@ require (
 	github.com/attestantio/go-eth2-client v0.19.4
 	github.com/deckarep/golang-set/v2 v2.6.0
 	github.com/ethereum/go-ethereum v1.13.4
-	github.com/ferranbt/fastssz v0.1.3
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4
@@ -31,6 +30,7 @@ require (
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
 	github.com/ethereum/c-kzg-4844 v0.3.1 // indirect
 	github.com/fatih/color v1.13.0 // indirect
+	github.com/ferranbt/fastssz v0.1.3 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -92,6 +92,6 @@ require (
 )
 
 replace (
-	github.com/attestantio/go-eth2-client => github.com/mpetrun5/go-eth2-client v0.0.0-20231117132517-d4f046b12a1a
+	github.com/attestantio/go-eth2-client => github.com/mpetrun5/go-eth2-client v0.0.0-20240621123821-af346ce374dc
 	github.com/umbracle/go-eth-consensus => github.com/sygmaprotocol/go-eth-consensus v0.0.0-20240209115220-99232c637bc3
 )
