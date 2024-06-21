@@ -92,6 +92,6 @@ require (
 )
 
 replace (
-	github.com/attestantio/go-eth2-client => github.com/mpetrun5/go-eth2-client v0.0.0-20240621123821-af346ce374dc
+	github.com/attestantio/go-eth2-client => github.com/mpetrun5/go-eth2-client v0.0.0-20240621130235-720f8a0c7212
 	github.com/umbracle/go-eth-consensus => github.com/sygmaprotocol/go-eth-consensus v0.0.0-20240209115220-99232c637bc3
 )
