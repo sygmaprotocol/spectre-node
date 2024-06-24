@@ -128,7 +128,7 @@ func main() {
 				}
 
 				lightClient := lightclient.NewLightClient(config.BeaconEndpoint)
-				p := prover.NewProver(proverClient, beaconProvider, lightClient, prover.Spec(config.Spec), config.FinalityThreshold)
+				p := prover.NewProver(proverClient, beaconProvider, lightClient, prover.Spec(config.Spec), config.FinalityThreshold, config.SlotsPerEpoch)
 				routerAddress := common.HexToAddress(config.Router)
 				stepHandler := handlers.NewStepEventHandler(msgChan, client, beaconProvider, p, routerAddress, id, domains)
 				rotateHandler := handlers.NewRotateHandler(msgChan, periodStore, p, id, domains, config.CommitteePeriodLength, latestPeriod)
