@@ -59,6 +59,7 @@ type Prover struct {
 	proverClient ProverClient
 
 	spec              Spec
+	slotsPerEpoch     uint64
 	finalityThreshold uint64
 }
 
@@ -68,6 +69,7 @@ func NewProver(
 	lightClient LightClient,
 	spec Spec,
 	finalityTreshold uint64,
+	slotsPerEpoch uint64,
 ) *Prover {
 	return &Prover{
 		proverClient:      proverClient,
@@ -75,6 +77,7 @@ func NewProver(
 		beaconClient:      beaconClient,
 		lightClient:       lightClient,
 		finalityThreshold: finalityTreshold,
+		slotsPerEpoch:     slotsPerEpoch,
 	}
 }
 
@@ -174,7 +177,7 @@ func (p *Prover) StepArgs() (*StepArgs, error) {
 	}
 	pubkeys := bootstrap.CurrentSyncCommittee.PubKeys
 
-	domain, err := p.beaconClient.Domain(context.Background(), SYNC_COMMITTEE_DOMAIN, phase0.Epoch(update.FinalizedHeader.Header.Slot/32))
+	domain, err := p.beaconClient.Domain(context.Background(), SYNC_COMMITTEE_DOMAIN, phase0.Epoch(update.FinalizedHeader.Header.Slot/p.slotsPerEpoch))
 	if err != nil {
 		return nil, err
 	}
@@ -213,7 +216,7 @@ func (p *Prover) RotateArgs(period uint64) (*RotateArgs, error) {
 	finalizedNextSyncCommitteeBranch[0] = update.NextSyncCommitteeBranch[0]
 	update.NextSyncCommitteeBranch = finalizedNextSyncCommitteeBranch
 
-	domain, err := p.beaconClient.Domain(context.Background(), SYNC_COMMITTEE_DOMAIN, phase0.Epoch(update.FinalizedHeader.Header.Slot/32))
+	domain, err := p.beaconClient.Domain(context.Background(), SYNC_COMMITTEE_DOMAIN, phase0.Epoch(update.FinalizedHeader.Header.Slot/p.slotsPerEpoch))
 	if err != nil {
 		return nil, err
 	}
