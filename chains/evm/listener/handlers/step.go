@@ -143,22 +143,25 @@ func (h *StepEventHandler) destinationDomains(slot uint64) ([]uint8, uint64, err
 	}
 
 	endBlock := block.Data.Deneb.Message.Body.ExecutionPayload.BlockNumber
-	if h.latestBlock == 0 {
-		return h.allDomains, endBlock, nil
-	}
+	return h.allDomains, endBlock, nil
 
-	deposits, err := h.fetchDeposits(big.NewInt(int64(h.latestBlock)), big.NewInt(int64(endBlock)))
-	if err != nil {
-		return domains.ToSlice(), endBlock, err
-	}
-	if len(deposits) == 0 {
+	/*
+		if h.latestBlock == 0 {
+		}
+
+		deposits, err := h.fetchDeposits(big.NewInt(int64(h.latestBlock)), big.NewInt(int64(endBlock)))
+		if err != nil {
+			return domains.ToSlice(), endBlock, err
+		}
+		if len(deposits) == 0 {
+			return domains.ToSlice(), endBlock, nil
+		}
+		for _, deposit := range deposits {
+			domains.Add(deposit.DestinationDomainID)
+		}
+
 		return domains.ToSlice(), endBlock, nil
-	}
-	for _, deposit := range deposits {
-		domains.Add(deposit.DestinationDomainID)
-	}
-
-	return domains.ToSlice(), endBlock, nil
+	*/
 }
 
 func (h *StepEventHandler) fetchDeposits(startBlock *big.Int, endBlock *big.Int) ([]*events.Deposit, error) {

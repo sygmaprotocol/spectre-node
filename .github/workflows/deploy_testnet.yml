@@ -6,7 +6,7 @@ name: spectre_testnet
 on:
   push:
     branches:
-      - main
+      - test
       
 env:
   ENVIRONMENT: 'TESTNET'

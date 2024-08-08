@@ -1,6 +1,8 @@
 module github.com/sygmaprotocol/spectre-node
 
-go 1.19
+go 1.21
+
+toolchain go1.22.5
 
 require (
 	github.com/attestantio/go-eth2-client v0.19.4
