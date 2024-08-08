@@ -2,8 +2,6 @@ module github.com/sygmaprotocol/spectre-node
 
 go 1.21
 
-toolchain go1.22.5
-
 require (
 	github.com/attestantio/go-eth2-client v0.19.4
 	github.com/deckarep/golang-set/v2 v2.6.0
