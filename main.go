@@ -69,11 +69,6 @@ func main() {
 	}
 	periodStore := store.NewPeriodStore(db)
 
-	domains := make([]uint8, 0)
-	for domain := range cfg.Domains {
-		domains = append(domains, domain)
-	}
-
 	proverClient := jsonrpc.NewClient(cfg.Prover.URL)
 
 	msgChan := make(chan []*message.Message)
