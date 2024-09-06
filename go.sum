@@ -334,6 +334,8 @@ github.com/sygmaprotocol/sygma-core v0.0.0-20231023115554-62219e098d0d h1:S2129X
 github.com/sygmaprotocol/sygma-core v0.0.0-20231023115554-62219e098d0d/go.mod h1:b4RZCyYr20Mp4WAAj4TkC6gU2KZ0ZWcpSGmKc6n8NKc=
 github.com/sygmaprotocol/sygma-core v0.0.0-20240903112324-b4b6389be638 h1:kJTNinlMVEHVkdfP1sLf5lzO7CsW3SyoG5cvDunPUqc=
 github.com/sygmaprotocol/sygma-core v0.0.0-20240903112324-b4b6389be638/go.mod h1:b4RZCyYr20Mp4WAAj4TkC6gU2KZ0ZWcpSGmKc6n8NKc=
+github.com/sygmaprotocol/sygma-core v0.0.0-20240906121237-ee6622158b4b h1:nYK6Jm3qA5UsyeBcsXFYgiZj2ASKA1cs1L79j1J2YE0=
+github.com/sygmaprotocol/sygma-core v0.0.0-20240906121237-ee6622158b4b/go.mod h1:b4RZCyYr20Mp4WAAj4TkC6gU2KZ0ZWcpSGmKc6n8NKc=
 github.com/syndtr/goleveldb v1.0.1-0.20220614013038-64ee5596c38a h1:1ur3QoCqvE5fl+nylMaIr9PVV1w343YRDtsy+Rwu7XI=
 github.com/syndtr/goleveldb v1.0.1-0.20220614013038-64ee5596c38a/go.mod h1:RRCYJbIwD5jmqPI9XoAFR0OcDxqUctll6zUj/+B4S48=
 github.com/tklauser/go-sysconf v0.3.12 h1:0QaGUFOdQaIVdPgfITYzaTegZvdCjmYO52cSFAEVmqU=
