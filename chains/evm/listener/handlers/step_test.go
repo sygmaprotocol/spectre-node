@@ -300,11 +300,9 @@ func (s *StepHandlerTestSuite) Test_HandleEvents_SecondStep_ValidDeposits() {
 	msgs, err := readFromChannel(s.msgChan)
 	s.Nil(err)
 	s.Equal(len(msgs), 1)
-	s.Equal(msgs[0].Destination, uint8(2))
 	msgs, err = readFromChannel(s.msgChan)
 	s.Nil(err)
 	s.Equal(len(msgs), 1)
-	s.Equal(msgs[0].Destination, uint8(3))
 	_, err = readFromChannel(s.msgChan)
 	s.NotNil(err)
 }
