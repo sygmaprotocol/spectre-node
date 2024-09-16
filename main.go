@@ -70,11 +70,6 @@ func main() {
 	}
 	periodStore := store.NewPeriodStore(db)
 
-	domains := make([]uint8, 0)
-	for domain := range cfg.Domains {
-		domains = append(domains, domain)
-	}
-
 	proverClient := jsonrpc.NewClient(cfg.Prover.URL)
 
 	msgChan := make(chan []*message.Message)
@@ -107,43 +102,50 @@ func main() {
 				t := monitored.NewMonitoredTransactor(transaction.NewTransaction, gasPricer, client, big.NewInt(config.MaxGasPrice), big.NewInt(config.GasIncreasePercentage))
 				go t.Monitor(ctx, time.Minute*3, time.Minute*10, time.Minute)
 
-				beaconClient, err := http.New(ctx,
-					http.WithAddress(config.BeaconEndpoint),
-					http.WithLogLevel(logLevel),
-					http.WithTimeout(time.Second*30),
-				)
-				if err != nil {
-					panic(err)
-				}
-				beaconProvider := beaconClient.(*http.Service)
+				var evmListener *listener.EVMListener
+				if len(config.TargetDomains) > 0 {
+					beaconClient, err := http.New(ctx,
+						http.WithAddress(config.BeaconEndpoint),
+						http.WithLogLevel(logLevel),
+						http.WithTimeout(time.Second*30),
+					)
+					if err != nil {
+						panic(err)
+					}
+					beaconProvider := beaconClient.(*http.Service)
 
-				storedPeriod, err := periodStore.Period(id)
-				if err != nil {
-					panic(err)
-				}
-				var latestPeriod *big.Int
-				if (storedPeriod.Uint64() >= config.StartingPeriod) && !config.ForcePeriod {
-					latestPeriod = storedPeriod
-				} else {
-					latestPeriod = big.NewInt(int64(config.StartingPeriod))
-				}
+					storedPeriod, err := periodStore.Period(id)
+					if err != nil {
+						panic(err)
+					}
+					var latestPeriod *big.Int
+					if (storedPeriod.Uint64() >= config.StartingPeriod) && !config.ForcePeriod {
+						latestPeriod = storedPeriod
+					} else {
+						latestPeriod = big.NewInt(int64(config.StartingPeriod))
+					}
 
-				lightClient := lightclient.NewLightClient(config.BeaconEndpoint)
-				p := prover.NewProver(proverClient, beaconProvider, lightClient, prover.Spec(config.Spec), config.FinalityThreshold, config.SlotsPerEpoch)
+					targetDomains := make([]uint8, len(config.TargetDomains))
+					for i, d := range config.TargetDomains {
+						targetDomains[i] = uint8(d)
+					}
 
-				domainCollectors := []handlers.DomainCollector{}
-				if config.Yaho != "" {
-					domainCollectors = append(domainCollectors, hashi.NewHashiDomainCollector(
-						id,
-						common.HexToAddress(config.Yaho),
-						client,
-						domains,
-					))
+					lightClient := lightclient.NewLightClient(config.BeaconEndpoint)
+					p := prover.NewProver(proverClient, beaconProvider, lightClient, prover.Spec(config.Spec), config.FinalityThreshold, config.SlotsPerEpoch)
+
+					domainCollectors := []handlers.DomainCollector{}
+					if config.Yaho != "" {
+						domainCollectors = append(domainCollectors, hashi.NewHashiDomainCollector(
+							id,
+							common.HexToAddress(config.Yaho),
+							client,
+							targetDomains,
+						))
+					}
+					stepHandler := handlers.NewStepEventHandler(msgChan, domainCollectors, beaconProvider, p, id, targetDomains)
+					rotateHandler := handlers.NewRotateHandler(msgChan, periodStore, p, id, targetDomains, config.CommitteePeriodLength, latestPeriod)
+					evmListener = listener.NewEVMListener(beaconProvider, []listener.EventHandler{rotateHandler, stepHandler}, id, time.Duration(config.RetryInterval)*time.Second)
 				}
-
-				stepHandler := handlers.NewStepEventHandler(msgChan, domainCollectors, beaconProvider, p, id, domains)
-				rotateHandler := handlers.NewRotateHandler(msgChan, periodStore, p, id, domains, config.CommitteePeriodLength, latestPeriod)
-				listener := listener.NewEVMListener(beaconProvider, []listener.EventHandler{rotateHandler, stepHandler}, id, time.Duration(config.RetryInterval)*time.Second)
 
 				messageHandler := message.NewMessageHandler()
 				rotateMessageHandler := evmMessage.EvmRotateHandler{}
@@ -154,7 +156,7 @@ func main() {
 				spectre := contracts.NewSpectreContract(common.HexToAddress(config.Spectre), t)
 				executor := executor.NewEVMExecutor(id, spectre)
 
-				chain := evm.NewEVMChain(listener, messageHandler, executor, id, nil)
+				chain := evm.NewEVMChain(evmListener, messageHandler, executor, id, nil)
 				chains[id] = chain
 			}
 		default:

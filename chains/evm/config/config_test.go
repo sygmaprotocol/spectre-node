@@ -88,6 +88,7 @@ func (s *EVMConfigTestSuite) Test_LoadEVMConfig_SuccessfulLoad() {
 	os.Setenv("SPECTRE_DOMAINS_1_FORCE_PERIOD", "true")
 	os.Setenv("SPECTRE_DOMAINS_1_FINALITY_THRESHOLD", "382")
 	os.Setenv("SPECTRE_DOMAINS_1_SLOTS_PER_EPOCH", "16")
+	os.Setenv("SPECTRE_DOMAINS_1_TARGET_DOMAINS", "1,2")
 
 	c, err := config.LoadEVMConfig(1)
 
@@ -111,5 +112,6 @@ func (s *EVMConfigTestSuite) Test_LoadEVMConfig_SuccessfulLoad() {
 		ForcePeriod:           true,
 		FinalityThreshold:     382,
 		SlotsPerEpoch:         16,
+		TargetDomains:         []int16{1, 2},
 	})
 }

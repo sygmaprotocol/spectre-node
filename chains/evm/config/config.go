@@ -12,10 +12,10 @@ import (
 
 type EVMConfig struct {
 	config.BaseNetworkConfig
-	BeaconEndpoint        string  `required:"true" split_words:"true"`
-	Router                string  ``
-	Spectre               string  `required:"true"`
-	Yaho                  string  ``
+	BeaconEndpoint        string `split_words:"true"`
+	Router                string
+	Spectre               string
+	Yaho                  string
 	Spec                  string  `default:"mainnet"`
 	MaxGasPrice           int64   `default:"500000000000" split_words:"true"`
 	GasMultiplier         float64 `default:"1" split_words:"true"`
@@ -26,6 +26,7 @@ type EVMConfig struct {
 	ForcePeriod           bool    `default:"false" split_words:"true"`
 	FinalityThreshold     uint64  `default:"342" split_words:"true"`
 	SlotsPerEpoch         uint64  `default:"32" split_words:"true"`
+	TargetDomains         []int16 `split_words:"true"`
 }
 
 // LoadEVMConfig loads EVM config from the environment and validates the fields

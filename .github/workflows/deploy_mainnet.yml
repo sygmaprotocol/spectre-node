@@ -1,0 +1,83 @@
+# The Licensed Work is (c) 2023 Sygma
+# SPDX-License-Identifier: LGPL-3.0-only
+
+name: Deploy Spectre on mainnet
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'The Release tag Version'
+        required: true
+        type: string
+
+  
+env:
+  AWS_REGION: '${{ secrets.AWS_REGION }}'
+  ENVIRONMENT: MAINNET
+  AWS_MAINNET: '${{ secrets.AWS_MAINNET }}'
+  REGISTRY: 'ghcr.io'
+  VERSION: ${{ inputs.release_tag }}
+  
+jobs:        
+  deploy:
+    name: deploy
+    runs-on: ubuntu-latest
+  
+    permissions:
+      contents: read
+      id-token: write
+      actions: write
+  
+    steps:
+      - name: Authorised User only
+        run: |
+          if [[ ! " mpetrun5 MakMuftic eedygreen " =~ " ${{ github.actor }} " ]]; then 
+            echo "You are not authorized to deploy to mainnet."
+            exit 1
+          fi
+
+      - name: checkout ecs file
+        uses: actions/checkout@v4
+        with:
+          repository: sygmaprotocol/devops
+          token: ${{ secrets.GHCR_TOKEN }}
+          ref: main
+  
+      - name: render jinja2 templates to task definition json files
+        uses: cuchi/jinja2-action@v1.2.2
+        with:
+          template: 'spectre/spectre-node/ecs/task_definition-${{ env.ENVIRONMENT }}.j2'
+          output_file: 'spectre/spectre-node/ecs/task_definition-${{ env.ENVIRONMENT }}.json'
+          data_format: json
+          variables: |
+            awsAccountId=${{ env.AWS_MAINNET }}
+            awsRegion=${{ env.AWS_REGION }}
+            awsEnv=${{ env.ENVIRONMENT }}
+            imageTag=${{ env.VERSION }}
+            awsEfs=${{ secrets.SPECTRE_EFS_MAINNET }}
+  
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_MAINNET }}:role/github-actions-${{ env.ENVIRONMENT }}-sygma
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: GithubActions
+  
+      - name: Deploy to Amazon ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: spectre/spectre-node/ecs/task_definition-${{ env.ENVIRONMENT }}.json
+          service: spectre-service-${{ env.ENVIRONMENT }}
+          cluster: relayer-${{ env.ENVIRONMENT }}
+          wait-for-service-stability: true
+  
+      - name: slack notify
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          fields: repo,message,commit,author,action,job,eventName,ref,workflow
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: always()
+        
