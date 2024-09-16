@@ -5,7 +5,6 @@ package handlers_test
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 	"math/big"
 	"testing"
@@ -15,8 +14,6 @@ import (
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/suite"
 	"github.com/sygmaprotocol/spectre-node/chains/evm/listener/handlers"
 	evmMessage "github.com/sygmaprotocol/spectre-node/chains/evm/message"
@@ -38,10 +35,10 @@ type StepHandlerTestSuite struct {
 
 	depositHandler *handlers.StepEventHandler
 
-	msgChan          chan []*message.Message
-	mockEventFetcher *mock.MockEventFetcher
-	mockStepProver   *mock.MockProver
-	mockBlockFetcher *mock.MockBlockFetcher
+	msgChan             chan []*message.Message
+	mockDomainCollector *mock.MockDomainCollector
+	mockStepProver      *mock.MockProver
+	mockBlockFetcher    *mock.MockBlockFetcher
 
 	sourceDomain uint8
 }
@@ -52,17 +49,16 @@ func TestRunConfigTestSuite(t *testing.T) {
 
 func (s *StepHandlerTestSuite) SetupTest() {
 	ctrl := gomock.NewController(s.T())
-	s.mockEventFetcher = mock.NewMockEventFetcher(ctrl)
+	s.mockDomainCollector = mock.NewMockDomainCollector(ctrl)
 	s.mockStepProver = mock.NewMockProver(ctrl)
 	s.mockBlockFetcher = mock.NewMockBlockFetcher(ctrl)
 	s.msgChan = make(chan []*message.Message, 10)
 	s.sourceDomain = 1
 	s.depositHandler = handlers.NewStepEventHandler(
 		s.msgChan,
-		s.mockEventFetcher,
+		[]handlers.DomainCollector{s.mockDomainCollector, s.mockDomainCollector},
 		s.mockBlockFetcher,
 		s.mockStepProver,
-		common.HexToAddress("0xb0b13f0109ef097C3Aa70Fb543EA4942114A845d"),
 		s.sourceDomain,
 		[]uint8{1, 2, 3})
 }
@@ -152,6 +148,7 @@ func (s *StepHandlerTestSuite) Test_HandleEvents_FirstStep_StepExecuted() {
 }
 
 func (s *StepHandlerTestSuite) Test_HandleEvents_SecondStep_MissingDeposits() {
+	s.mockDomainCollector.EXPECT().CollectDomains(big.NewInt(100), big.NewInt(110)).Return([]uint8{}, nil).Times(2)
 	s.mockStepProver.EXPECT().StepArgs().Return(&prover.StepArgs{
 		Update: &consensus.LightClientFinalityUpdateDeneb{
 			FinalizedHeader: &consensus.LightClientHeaderDeneb{
@@ -214,7 +211,6 @@ func (s *StepHandlerTestSuite) Test_HandleEvents_SecondStep_MissingDeposits() {
 			},
 		},
 	}, nil)
-	s.mockEventFetcher.EXPECT().FetchEventLogs(context.Background(), gomock.Any(), gomock.Any(), big.NewInt(100), big.NewInt(110)).Return([]types.Log{}, nil)
 
 	err = s.depositHandler.HandleEvents(&apiv1.Finality{
 		Finalized: &phase0.Checkpoint{
@@ -228,6 +224,8 @@ func (s *StepHandlerTestSuite) Test_HandleEvents_SecondStep_MissingDeposits() {
 }
 
 func (s *StepHandlerTestSuite) Test_HandleEvents_SecondStep_ValidDeposits() {
+	s.mockDomainCollector.EXPECT().CollectDomains(big.NewInt(100), big.NewInt(110)).Return([]uint8{2}, nil)
+	s.mockDomainCollector.EXPECT().CollectDomains(big.NewInt(100), big.NewInt(110)).Return([]uint8{3}, nil)
 	s.mockStepProver.EXPECT().StepArgs().Return(&prover.StepArgs{
 		Update: &consensus.LightClientFinalityUpdateDeneb{
 			FinalizedHeader: &consensus.LightClientHeaderDeneb{
@@ -287,16 +285,6 @@ func (s *StepHandlerTestSuite) Test_HandleEvents_SecondStep_ValidDeposits() {
 						},
 					},
 				},
-			},
-		},
-	}, nil)
-	validDepositData, _ := hex.DecodeString("000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000000")
-	s.mockEventFetcher.EXPECT().FetchEventLogs(context.Background(), gomock.Any(), gomock.Any(), big.NewInt(100), big.NewInt(110)).Return([]types.Log{
-		{
-			Data: validDepositData,
-			Topics: []common.Hash{
-				{},
-				common.HexToHash("0xd68eb9b5E135b96c1Af165e1D8c4e2eB0E1CE4CD"),
 			},
 		},
 	}, nil)
@@ -313,6 +301,10 @@ func (s *StepHandlerTestSuite) Test_HandleEvents_SecondStep_ValidDeposits() {
 	s.Nil(err)
 	s.Equal(len(msgs), 1)
 	s.Equal(msgs[0].Destination, uint8(2))
+	msgs, err = readFromChannel(s.msgChan)
+	s.Nil(err)
+	s.Equal(len(msgs), 1)
+	s.Equal(msgs[0].Destination, uint8(3))
 	_, err = readFromChannel(s.msgChan)
 	s.NotNil(err)
 }
