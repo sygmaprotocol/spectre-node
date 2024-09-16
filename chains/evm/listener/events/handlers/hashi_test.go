@@ -49,8 +49,8 @@ func (s *HashiHandlerTestSuite) SetupTest() {
 }
 
 func (s *HashiHandlerTestSuite) Test_CollectDomains_FetchingLogFails() {
-	s.mockEventFetcher.EXPECT().FetchEventLogs(gomock.Any(), s.yahoAddress, events.MessageDispatchedSig, big.NewInt(100), big.NewInt(1100)).Return([]types.Log{}, nil)
-	s.mockEventFetcher.EXPECT().FetchEventLogs(gomock.Any(), s.yahoAddress, events.MessageDispatchedSig, big.NewInt(1101), big.NewInt(2101)).Return([]types.Log{{}}, fmt.Errorf("error"))
+	s.mockEventFetcher.EXPECT().FetchEventLogs(gomock.Any(), s.yahoAddress, string(events.MessageDispatchedSig), big.NewInt(100), big.NewInt(1100)).Return([]types.Log{}, nil)
+	s.mockEventFetcher.EXPECT().FetchEventLogs(gomock.Any(), s.yahoAddress, string(events.MessageDispatchedSig), big.NewInt(1101), big.NewInt(2101)).Return([]types.Log{{}}, fmt.Errorf("error"))
 
 	_, err := s.hashiHandler.CollectDomains(big.NewInt(100), big.NewInt(2568))
 
@@ -58,9 +58,9 @@ func (s *HashiHandlerTestSuite) Test_CollectDomains_FetchingLogFails() {
 }
 
 func (s *HashiHandlerTestSuite) Test_CollectDomains_ValidMessage() {
-	s.mockEventFetcher.EXPECT().FetchEventLogs(gomock.Any(), s.yahoAddress, events.MessageDispatchedSig, big.NewInt(100), big.NewInt(1100)).Return([]types.Log{}, nil)
-	s.mockEventFetcher.EXPECT().FetchEventLogs(gomock.Any(), s.yahoAddress, events.MessageDispatchedSig, big.NewInt(1101), big.NewInt(2101)).Return([]types.Log{{}}, nil)
-	s.mockEventFetcher.EXPECT().FetchEventLogs(gomock.Any(), s.yahoAddress, events.MessageDispatchedSig, big.NewInt(2102), big.NewInt(2568)).Return([]types.Log{}, nil)
+	s.mockEventFetcher.EXPECT().FetchEventLogs(gomock.Any(), s.yahoAddress, string(events.MessageDispatchedSig), big.NewInt(100), big.NewInt(1100)).Return([]types.Log{}, nil)
+	s.mockEventFetcher.EXPECT().FetchEventLogs(gomock.Any(), s.yahoAddress, string(events.MessageDispatchedSig), big.NewInt(1101), big.NewInt(2101)).Return([]types.Log{{}}, nil)
+	s.mockEventFetcher.EXPECT().FetchEventLogs(gomock.Any(), s.yahoAddress, string(events.MessageDispatchedSig), big.NewInt(2102), big.NewInt(2568)).Return([]types.Log{}, nil)
 
 	domains, err := s.hashiHandler.CollectDomains(big.NewInt(100), big.NewInt(2568))
 
