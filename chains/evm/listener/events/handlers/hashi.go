@@ -24,21 +24,23 @@ type HashiDomainCollector struct {
 func NewHashiDomainCollector(
 	domainID uint8,
 	yahoAddress common.Address,
+	eventFetcher EventFetcher,
 	domains []uint8,
 ) *HashiDomainCollector {
 	abi, _ := ethereumABI.JSON(strings.NewReader(abi.YahoABI))
 	return &HashiDomainCollector{
-		domainID:    domainID,
-		yahoAddress: yahoAddress,
-		yahoABI:     abi,
-		domains:     domains,
+		domainID:     domainID,
+		yahoAddress:  yahoAddress,
+		yahoABI:      abi,
+		domains:      domains,
+		eventFetcher: eventFetcher,
 	}
 }
 
 func (h *HashiDomainCollector) CollectDomains(startBlock *big.Int, endBlock *big.Int) ([]uint8, error) {
 	logs, err := fetchLogs(h.eventFetcher, startBlock, endBlock, h.yahoAddress, string(events.MessageDispatchedSig))
 	if err != nil {
-		return []uint8{}, nil
+		return []uint8{}, err
 	}
 
 	if len(logs) == 0 {

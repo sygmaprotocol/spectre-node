@@ -27,6 +27,7 @@ genmocks:
 	mockgen -source=./chains/evm/executor/executor.go -destination=./mock/executor.go -package mock
 	mockgen -source=./chains/evm/prover/prover.go -destination=./mock/prover.go -package mock
 	mockgen -destination=./mock/store.go -package mock github.com/sygmaprotocol/sygma-core/store KeyValueReaderWriter
+	mockgen -destination=./mock/logs.go -package mock -source=./chains/evm/listener/events/handlers/logs.go
 
 PLATFORMS := linux/amd64 darwin/amd64 darwin/arm64 linux/arm
 temp = $(subst /, ,$@)
