@@ -39,7 +39,7 @@ func (s *EVMConfigTestSuite) Test_LoadEVMConfig_SuccessfulLoad_DefaultValues() {
 	os.Setenv("SPECTRE_DOMAINS_1_ENDPOINT", "http://endpoint.com")
 	os.Setenv("SPECTRE_DOMAINS_1_KEY", "key")
 	os.Setenv("SPECTRE_DOMAINS_1_SPECTRE", "spectre")
-	os.Setenv("SPECTRE_DOMAINS_1_ROUTER", "router")
+	os.Setenv("SPECTRE_DOMAINS_1_YAHO", "yaho")
 	os.Setenv("SPECTRE_DOMAINS_1_BEACON_ENDPOINT", "endpoint")
 	os.Setenv("SPECTRE_DOMAINS_2_ROUTER", "invalid")
 	os.Setenv("SPECTRE_DOMAINS_1_STARTING_PERIOD", "500")
@@ -53,7 +53,7 @@ func (s *EVMConfigTestSuite) Test_LoadEVMConfig_SuccessfulLoad_DefaultValues() {
 			Key:      "key",
 			Endpoint: "http://endpoint.com",
 		},
-		Router:                "router",
+		Yaho:                  "yaho",
 		Spectre:               "spectre",
 		Spec:                  "mainnet",
 		GasMultiplier:         1,
@@ -74,6 +74,7 @@ func (s *EVMConfigTestSuite) Test_LoadEVMConfig_SuccessfulLoad() {
 	os.Setenv("SPECTRE_DOMAINS_1_KEY", "key")
 	os.Setenv("SPECTRE_DOMAINS_1_SPECTRE", "spectre")
 	os.Setenv("SPECTRE_DOMAINS_1_ROUTER", "router")
+	os.Setenv("SPECTRE_DOMAINS_1_YAHO", "yaho")
 	os.Setenv("SPECTRE_DOMAINS_1_BEACON_ENDPOINT", "endpoint")
 	os.Setenv("SPECTRE_DOMAINS_1_MAX_GAS_PRICE", "1000")
 	os.Setenv("SPECTRE_DOMAINS_1_BLOCK_INTERVAL", "10")
@@ -98,6 +99,7 @@ func (s *EVMConfigTestSuite) Test_LoadEVMConfig_SuccessfulLoad() {
 			Endpoint: "http://endpoint.com",
 		},
 		Router:                "router",
+		Yaho:                  "yaho",
 		Spectre:               "spectre",
 		Spec:                  "testnet",
 		GasMultiplier:         1,

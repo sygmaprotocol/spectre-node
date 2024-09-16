@@ -15,6 +15,7 @@ type EVMConfig struct {
 	BeaconEndpoint        string `split_words:"true"`
 	Router                string
 	Spectre               string
+	Yaho                  string
 	Spec                  string  `default:"mainnet"`
 	MaxGasPrice           int64   `default:"500000000000" split_words:"true"`
 	GasMultiplier         float64 `default:"1" split_words:"true"`

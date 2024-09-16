@@ -21,6 +21,7 @@ import (
 	"github.com/sygmaprotocol/spectre-node/chains/evm/executor"
 	"github.com/sygmaprotocol/spectre-node/chains/evm/lightclient"
 	"github.com/sygmaprotocol/spectre-node/chains/evm/listener"
+	hashi "github.com/sygmaprotocol/spectre-node/chains/evm/listener/events/handlers"
 	"github.com/sygmaprotocol/spectre-node/chains/evm/listener/handlers"
 	evmMessage "github.com/sygmaprotocol/spectre-node/chains/evm/message"
 	"github.com/sygmaprotocol/spectre-node/chains/evm/prover"
@@ -131,8 +132,17 @@ func main() {
 
 					lightClient := lightclient.NewLightClient(config.BeaconEndpoint)
 					p := prover.NewProver(proverClient, beaconProvider, lightClient, prover.Spec(config.Spec), config.FinalityThreshold, config.SlotsPerEpoch)
-					routerAddress := common.HexToAddress(config.Router)
-					stepHandler := handlers.NewStepEventHandler(msgChan, client, beaconProvider, p, routerAddress, id, targetDomains)
+
+					domainCollectors := []handlers.DomainCollector{}
+					if config.Yaho != "" {
+						domainCollectors = append(domainCollectors, hashi.NewHashiDomainCollector(
+							id,
+							common.HexToAddress(config.Yaho),
+							client,
+							targetDomains,
+						))
+					}
+					stepHandler := handlers.NewStepEventHandler(msgChan, domainCollectors, beaconProvider, p, id, targetDomains)
 					rotateHandler := handlers.NewRotateHandler(msgChan, periodStore, p, id, targetDomains, config.CommitteePeriodLength, latestPeriod)
 					evmListener = listener.NewEVMListener(beaconProvider, []listener.EventHandler{rotateHandler, stepHandler}, id, time.Duration(config.RetryInterval)*time.Second)
 				}

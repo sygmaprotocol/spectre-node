@@ -15,50 +15,10 @@ import (
 
 	api "github.com/attestantio/go-eth2-client/api"
 	spec "github.com/attestantio/go-eth2-client/spec"
-	common "github.com/ethereum/go-ethereum/common"
-	types "github.com/ethereum/go-ethereum/core/types"
 	message "github.com/sygmaprotocol/spectre-node/chains/evm/message"
 	prover "github.com/sygmaprotocol/spectre-node/chains/evm/prover"
 	gomock "go.uber.org/mock/gomock"
 )
-
-// MockEventFetcher is a mock of EventFetcher interface.
-type MockEventFetcher struct {
-	ctrl     *gomock.Controller
-	recorder *MockEventFetcherMockRecorder
-}
-
-// MockEventFetcherMockRecorder is the mock recorder for MockEventFetcher.
-type MockEventFetcherMockRecorder struct {
-	mock *MockEventFetcher
-}
-
-// NewMockEventFetcher creates a new mock instance.
-func NewMockEventFetcher(ctrl *gomock.Controller) *MockEventFetcher {
-	mock := &MockEventFetcher{ctrl: ctrl}
-	mock.recorder = &MockEventFetcherMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockEventFetcher) EXPECT() *MockEventFetcherMockRecorder {
-	return m.recorder
-}
-
-// FetchEventLogs mocks base method.
-func (m *MockEventFetcher) FetchEventLogs(ctx context.Context, contractAddress common.Address, event string, startBlock, endBlock *big.Int) ([]types.Log, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FetchEventLogs", ctx, contractAddress, event, startBlock, endBlock)
-	ret0, _ := ret[0].([]types.Log)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FetchEventLogs indicates an expected call of FetchEventLogs.
-func (mr *MockEventFetcherMockRecorder) FetchEventLogs(ctx, contractAddress, event, startBlock, endBlock any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchEventLogs", reflect.TypeOf((*MockEventFetcher)(nil).FetchEventLogs), ctx, contractAddress, event, startBlock, endBlock)
-}
 
 // MockProver is a mock of Prover interface.
 type MockProver struct {
@@ -179,4 +139,42 @@ func (m *MockBlockFetcher) SignedBeaconBlock(ctx context.Context, opts *api.Sign
 func (mr *MockBlockFetcherMockRecorder) SignedBeaconBlock(ctx, opts any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignedBeaconBlock", reflect.TypeOf((*MockBlockFetcher)(nil).SignedBeaconBlock), ctx, opts)
+}
+
+// MockDomainCollector is a mock of DomainCollector interface.
+type MockDomainCollector struct {
+	ctrl     *gomock.Controller
+	recorder *MockDomainCollectorMockRecorder
+}
+
+// MockDomainCollectorMockRecorder is the mock recorder for MockDomainCollector.
+type MockDomainCollectorMockRecorder struct {
+	mock *MockDomainCollector
+}
+
+// NewMockDomainCollector creates a new mock instance.
+func NewMockDomainCollector(ctrl *gomock.Controller) *MockDomainCollector {
+	mock := &MockDomainCollector{ctrl: ctrl}
+	mock.recorder = &MockDomainCollectorMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockDomainCollector) EXPECT() *MockDomainCollectorMockRecorder {
+	return m.recorder
+}
+
+// CollectDomains mocks base method.
+func (m *MockDomainCollector) CollectDomains(startBlock, endBlock *big.Int) ([]uint8, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CollectDomains", startBlock, endBlock)
+	ret0, _ := ret[0].([]uint8)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CollectDomains indicates an expected call of CollectDomains.
+func (mr *MockDomainCollectorMockRecorder) CollectDomains(startBlock, endBlock any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CollectDomains", reflect.TypeOf((*MockDomainCollector)(nil).CollectDomains), startBlock, endBlock)
 }

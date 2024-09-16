@@ -7,28 +7,18 @@ import (
 	"context"
 	"fmt"
 	"math/big"
-	"strings"
 
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
 	mapset "github.com/deckarep/golang-set/v2"
-	ethereumABI "github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/rs/zerolog/log"
-	"github.com/sygmaprotocol/spectre-node/chains/evm/abi"
-	"github.com/sygmaprotocol/spectre-node/chains/evm/listener/events"
 	evmMessage "github.com/sygmaprotocol/spectre-node/chains/evm/message"
 	"github.com/sygmaprotocol/spectre-node/chains/evm/prover"
 	"github.com/sygmaprotocol/sygma-core/relayer/message"
 )
 
 const EXECUTION_STATE_ROOT_INDEX = 34
-
-type EventFetcher interface {
-	FetchEventLogs(ctx context.Context, contractAddress common.Address, event string, startBlock *big.Int, endBlock *big.Int) ([]types.Log, error)
-}
 
 type Prover interface {
 	StepProof(args *prover.StepArgs) (*prover.EvmProof[evmMessage.SyncStepInput], error)
@@ -41,41 +31,39 @@ type BlockFetcher interface {
 	SignedBeaconBlock(ctx context.Context, opts *api.SignedBeaconBlockOpts) (*api.Response[*spec.VersionedSignedBeaconBlock], error)
 }
 
+type DomainCollector interface {
+	CollectDomains(startBlock *big.Int, endBlock *big.Int) ([]uint8, error)
+}
+
 type StepEventHandler struct {
 	msgChan chan []*message.Message
 
-	eventFetcher EventFetcher
-	blockFetcher BlockFetcher
-	prover       Prover
+	blockFetcher     BlockFetcher
+	domainCollectors []DomainCollector
+	prover           Prover
 
-	domainID      uint8
-	allDomains    []uint8
-	routerABI     ethereumABI.ABI
-	routerAddress common.Address
+	domainID uint8
+	domains  []uint8
 
 	latestBlock uint64
 }
 
 func NewStepEventHandler(
 	msgChan chan []*message.Message,
-	eventFetcher EventFetcher,
+	domainCollectors []DomainCollector,
 	blockFetcher BlockFetcher,
 	prover Prover,
-	routerAddress common.Address,
 	domainID uint8,
 	domains []uint8,
 ) *StepEventHandler {
-	routerABI, _ := ethereumABI.JSON(strings.NewReader(abi.RouterABI))
 	return &StepEventHandler{
-		eventFetcher:  eventFetcher,
-		blockFetcher:  blockFetcher,
-		prover:        prover,
-		routerAddress: routerAddress,
-		routerABI:     routerABI,
-		msgChan:       msgChan,
-		domainID:      domainID,
-		allDomains:    domains,
-		latestBlock:   0,
+		blockFetcher:     blockFetcher,
+		prover:           prover,
+		domainCollectors: domainCollectors,
+		msgChan:          msgChan,
+		domainID:         domainID,
+		domains:          domains,
+		latestBlock:      0,
 	}
 }
 
@@ -141,54 +129,17 @@ func (h *StepEventHandler) destinationDomains(slot uint64) ([]uint8, uint64, err
 	if err != nil {
 		return domains.ToSlice(), 0, err
 	}
-
 	endBlock := block.Data.Deneb.Message.Body.ExecutionPayload.BlockNumber
 	if h.latestBlock == 0 {
-		return h.allDomains, endBlock, nil
+		return h.domains, endBlock, nil
 	}
 
-	deposits, err := h.fetchDeposits(big.NewInt(int64(h.latestBlock)), big.NewInt(int64(endBlock)))
-	if err != nil {
-		return domains.ToSlice(), endBlock, err
-	}
-	if len(deposits) == 0 {
-		return domains.ToSlice(), endBlock, nil
-	}
-	for _, deposit := range deposits {
-		domains.Add(deposit.DestinationDomainID)
-	}
-
-	return domains.ToSlice(), endBlock, nil
-}
-
-func (h *StepEventHandler) fetchDeposits(startBlock *big.Int, endBlock *big.Int) ([]*events.Deposit, error) {
-	logs, err := h.eventFetcher.FetchEventLogs(context.Background(), h.routerAddress, string(events.DepositSig), startBlock, endBlock)
-	if err != nil {
-		return nil, err
-	}
-
-	deposits := make([]*events.Deposit, 0)
-	for _, dl := range logs {
-		d, err := h.unpackDeposit(dl.Data)
+	for _, collector := range h.domainCollectors {
+		collectedDomains, err := collector.CollectDomains(new(big.Int).SetUint64(h.latestBlock), new(big.Int).SetUint64(endBlock))
 		if err != nil {
-			log.Error().Msgf("Failed unpacking deposit event log: %v", err)
-			continue
+			return domains.ToSlice(), 0, err
 		}
-		d.SenderAddress = common.BytesToAddress(dl.Topics[1].Bytes())
-
-		log.Debug().Msgf("Found deposit log in block: %d, TxHash: %s, contractAddress: %s, sender: %s", dl.BlockNumber, dl.TxHash, dl.Address, d.SenderAddress)
-		deposits = append(deposits, d)
+		domains.Append(collectedDomains...)
 	}
-
-	return deposits, nil
-}
-
-func (h *StepEventHandler) unpackDeposit(data []byte) (*events.Deposit, error) {
-	var d events.Deposit
-	err := h.routerABI.UnpackIntoInterface(&d, "Deposit", data)
-	if err != nil {
-		return &events.Deposit{}, err
-	}
-
-	return &d, nil
+	return domains.ToSlice(), endBlock, nil
 }
