@@ -16,7 +16,7 @@ func (es EventSig) GetTopic() common.Hash {
 
 const (
 	DepositSig           EventSig = "Deposit(uint8,uint8,bytes32,uint64,address,bytes)"
-	MessageDispatchedSig          = "MessageDispatched(uint256,(uint256,uint256,uint256,address,address,bytes,address[],address[]))"
+	MessageDispatchedSig EventSig = "MessageDispatched(uint256,(uint256,uint256,uint256,address,address,bytes,address[],address[]))"
 )
 
 // Deposit struct holds event data raised by Deposit event on-chain
