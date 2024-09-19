@@ -68,7 +68,7 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
           task-definition: spectre/spectre-node/ecs/task_definition-${{ env.ENVIRONMENT }}.json
-          service: spectre-service-${{ env.ENVIRONMENT }}
+          service: spectre-node-service-${{ env.ENVIRONMENT }}
           cluster: relayer-${{ env.ENVIRONMENT }}
           wait-for-service-stability: true
   
