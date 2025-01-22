@@ -45,7 +45,7 @@ jobs:
           ref: main
   
       - name: render jinja2 templates to task definition json files
-        uses: cuchi/jinja2-action@v1.2.2
+        uses: cuchi/jinja2-action@v1.3.0
         with:
           template: 'spectre/spectre-node/ecs/task_definition-${{ env.ENVIRONMENT }}.j2'
           output_file: 'spectre/spectre-node/ecs/task_definition-${{ env.ENVIRONMENT }}.json'
