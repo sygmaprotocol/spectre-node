@@ -23,6 +23,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      packages: write
 
     steps:
       - name: checkout the source code
@@ -33,7 +34,7 @@ jobs:
 
       - name: login to ghcr
         id: ghcr
-        uses: docker/login-action@v3
+        uses: docker/login-action@v6
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.repository_owner }}
