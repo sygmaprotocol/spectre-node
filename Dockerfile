@@ -1,7 +1,7 @@
 # Copyright 2020 ChainSafe Systems
 # SPDX-License-Identifier: LGPL-3.0-only
 
-FROM alpine as alpine
+FROM alpine AS alpine
 RUN apk --no-cache add ca-certificates
 
 FROM  golang:1.19 AS builder
@@ -17,5 +17,5 @@ COPY --from=builder /spectre ./
 RUN chmod +x ./spectre
 RUN mkdir -p /mount
 COPY --from=alpine /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-LABEL org.opencontainers.image.source https://github.com/sprintertech/spectre-node
+LABEL org.opencontainers.image.source=https://github.com/sprintertech/spectre-node
 ENTRYPOINT ["./spectre"]
